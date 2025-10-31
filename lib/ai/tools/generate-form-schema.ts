@@ -107,6 +107,10 @@ const formSchemaOutputSchema = z.object({
     ),
 });
 
+// Export types for use in components
+export type FormField = z.infer<typeof formFieldSchema>;
+export type FormSchema = z.infer<typeof formSchemaOutputSchema>;
+
 export const generateFormSchema = ({
   session,
   dataStream,
@@ -215,7 +219,6 @@ Generate a clean, production-ready form schema.`;
 
       return {
         schema: generatedSchema,
-        message: `✅ Form schema generated!\n\n**${generatedSchema.title}**\n${generatedSchema.fields.length} fields created.\n\nWould you like to add, remove, or modify any fields? Or is this ready to finalize?`,
       };
     },
   });

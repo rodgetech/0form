@@ -1,11 +1,7 @@
 import { auth } from "@/app/(auth)/auth";
-import {
-  createForm,
-  getChatById,
-  getFormsByUserId,
-} from "@/lib/db/queries";
+import { createForm, getChatById, getFormsByUserId } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
-import { createFormSchema, type CreateFormBody } from "./schema";
+import { type CreateFormBody, createFormSchema } from "./schema";
 
 // GET /api/forms - List all forms for authenticated user
 export async function GET() {
@@ -55,10 +51,7 @@ export async function POST(request: Request) {
     const chat = await getChatById({ id: chatId });
 
     if (!chat) {
-      return new ChatSDKError(
-        "not_found:api",
-        "Chat not found"
-      ).toResponse();
+      return new ChatSDKError("not_found:api", "Chat not found").toResponse();
     }
 
     if (chat.userId !== session.user.id) {

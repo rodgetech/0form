@@ -1,7 +1,7 @@
 import { auth } from "@/app/(auth)/auth";
 import { deleteForm, getFormById, updateForm } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
-import { updateFormSchema, type UpdateFormBody } from "../schema";
+import { type UpdateFormBody, updateFormSchema } from "../schema";
 
 // GET /api/forms/[id] - Get single form by ID
 export async function GET(
@@ -26,10 +26,7 @@ export async function GET(
     const form = await getFormById({ id });
 
     if (!form) {
-      return new ChatSDKError(
-        "not_found:api",
-        "Form not found"
-      ).toResponse();
+      return new ChatSDKError("not_found:api", "Form not found").toResponse();
     }
 
     if (form.userId !== session.user.id) {
@@ -79,10 +76,7 @@ export async function PATCH(
     const existingForm = await getFormById({ id });
 
     if (!existingForm) {
-      return new ChatSDKError(
-        "not_found:api",
-        "Form not found"
-      ).toResponse();
+      return new ChatSDKError("not_found:api", "Form not found").toResponse();
     }
 
     if (existingForm.userId !== session.user.id) {
@@ -131,10 +125,7 @@ export async function DELETE(
     const form = await getFormById({ id });
 
     if (!form) {
-      return new ChatSDKError(
-        "not_found:api",
-        "Form not found"
-      ).toResponse();
+      return new ChatSDKError("not_found:api", "Form not found").toResponse();
     }
 
     if (form.userId !== session.user.id) {

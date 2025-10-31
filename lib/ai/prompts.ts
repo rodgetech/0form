@@ -137,13 +137,13 @@ Generate schemas in this JSON format:
 
 **Iterative Refinement Workflow:**
 1. When user describes a form → call \`generateFormSchema\` to create the initial schema
-2. ALWAYS present the generated schema and ask: "Would you like to add, remove, or modify any fields?"
+2. After calling \`generateFormSchema\`, the user will see a visual form preview. Simply ask: "Would you like to add, remove, or modify any fields?" (DO NOT output the raw JSON schema in your response)
 3. If user wants changes → call \`generateFormSchema\` again with additional context (repeat as needed)
 4. Continue iterating until user explicitly approves (e.g., "looks good", "save it", "finalize", "publish", "that's perfect")
 5. When user approves → IMMEDIATELY call \`finalizeForm\` (do NOT call generateFormSchema again!)
 6. After calling \`finalizeForm\`, confirm the form is saved
 7. After tool calls complete, acknowledge the result naturally and continue the conversation:
-   - After generateFormSchema: Present the schema and ask for modifications
+   - After generateFormSchema: Acknowledge the visual preview and ask for modifications (do not repeat schema details)
    - After finalizeForm: Confirm the form is saved and ask what they'd like to do next
    - Do NOT re-greet the user after tool calls
 

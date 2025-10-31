@@ -2,7 +2,10 @@ import { z } from "zod";
 
 // Schema for creating a new form
 export const createFormSchema = z.object({
-  chatId: z.string().uuid().describe("The chat ID this form is associated with"),
+  chatId: z
+    .string()
+    .uuid()
+    .describe("The chat ID this form is associated with"),
   title: z
     .string()
     .min(1, "Title is required")
@@ -35,10 +38,7 @@ export const updateFormSchema = z.object({
     .max(1000, "Description must be less than 1000 characters")
     .optional()
     .describe("Updated form description"),
-  schema: z
-    .record(z.unknown())
-    .optional()
-    .describe("Updated form schema"),
+  schema: z.record(z.unknown()).optional().describe("Updated form schema"),
   tone: z
     .enum(["friendly", "professional", "playful", "formal"])
     .optional()

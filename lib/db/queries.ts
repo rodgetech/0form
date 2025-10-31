@@ -136,7 +136,7 @@ export async function deleteAllChatsByUserId({ userId }: { userId: string }) {
       return { deletedCount: 0 };
     }
 
-    const chatIds = userChats.map(c => c.id);
+    const chatIds = userChats.map((c) => c.id);
 
     await db.delete(vote).where(inArray(vote.chatId, chatIds));
     await db.delete(message).where(inArray(message.chatId, chatIds));
@@ -636,17 +636,11 @@ export async function createForm({
 
 export async function getFormById({ id }: { id: string }) {
   try {
-    const [existingForm] = await db
-      .select()
-      .from(form)
-      .where(eq(form.id, id));
+    const [existingForm] = await db.select().from(form).where(eq(form.id, id));
 
     return existingForm;
   } catch (_error) {
-    throw new ChatSDKError(
-      "bad_request:database",
-      "Failed to get form by id"
-    );
+    throw new ChatSDKError("bad_request:database", "Failed to get form by id");
   }
 }
 

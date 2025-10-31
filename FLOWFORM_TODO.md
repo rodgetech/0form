@@ -130,6 +130,14 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 
 ### 2.3 In-Chat Form Status Display
 
+- 🔄 **Task 2.3.0:** Create form preview component for in-chat visualization
+
+  - New files: `components/flowform/form-preview.tsx` and `components/flowform/form-field-preview.tsx`
+  - Shows beautiful read-only form UI (like weather widget) when AI generates schema
+  - Displays all form fields with appropriate input components
+  - Source of truth: FormSchema from AI tool (no modifications)
+  - Follows AI SDK generative UI pattern (handler in message.tsx)
+
 - ⬜ **Task 2.3.1:** Create form status card component
 
   - New file: `components/flowform/form-status-card.tsx`
