@@ -164,12 +164,13 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 
 ### 2.4 Chat Sidebar Updates (Form History)
 
-- ⬜ **Task 2.4.1:** Update sidebar to show form status
+- ✅ **Task 2.4.1:** Update sidebar to show form status
 
-  - Modify `components/sidebar-history.tsx`
-  - Add visual indicator for chats with published forms (e.g., 📋 icon or badge)
-  - Show submission count if available (e.g., "Customer Feedback (12)")
-  - Keep existing chat title/timestamp display
+  - Modified `lib/db/queries.ts` - Updated `getChatsByUserId()` with LEFT JOIN to form table
+  - Created `ChatWithForm` type in `lib/db/schema.ts` with `hasForm` boolean field
+  - Updated `components/sidebar-history-item.tsx` to show green checkmark icon (CheckCircleFillIcon)
+  - Visual indicator: Green checkmark (14px) appears before chat title when form exists
+  - No submission count in this phase (keeping it simple for now)
 
 - ⬜ **Task 2.4.2:** Add welcome message for first-time users
   - When user starts first chat, AI says: "Welcome! I'll help you create conversational forms. What would you like to collect from your users?"

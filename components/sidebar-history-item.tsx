@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { memo } from "react";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
-import type { Chat } from "@/lib/db/schema";
+import type { ChatWithForm } from "@/lib/db/schema";
 import {
   CheckCircleFillIcon,
   GlobeIcon,
@@ -32,7 +32,7 @@ const PureChatItem = ({
   onDelete,
   setOpenMobile,
 }: {
-  chat: Chat;
+  chat: ChatWithForm;
   isActive: boolean;
   onDelete: (chatId: string) => void;
   setOpenMobile: (open: boolean) => void;
@@ -45,8 +45,18 @@ const PureChatItem = ({
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive}>
-        <Link href={`/chat/${chat.id}`} onClick={() => setOpenMobile(false)}>
-          <span>{chat.title}</span>
+        <Link
+          className="flex items-center gap-2"
+          href={`/chat/${chat.id}`}
+          onClick={() => setOpenMobile(false)}
+        >
+          {chat.hasForm && (
+            <CheckCircleFillIcon
+              className="shrink-0 text-green-600"
+              size={14}
+            />
+          )}
+          <span className="truncate">{chat.title}</span>
         </Link>
       </SidebarMenuButton>
 

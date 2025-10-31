@@ -35,6 +35,7 @@ export const chat = pgTable("Chat", {
 });
 
 export type Chat = InferSelectModel<typeof chat>;
+export type ChatWithForm = Chat & { hasForm: boolean };
 
 // DEPRECATED: The following schema is deprecated and will be removed in the future.
 // Read the migration guide at https://chat-sdk.dev/docs/migration-guides/message-parts

@@ -11,6 +11,7 @@ import {
   inArray,
   lt,
   type SQL,
+  sql,
 } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
@@ -21,6 +22,7 @@ import type { AppUsage } from "../usage";
 import { generateUUID } from "../utils";
 import {
   type Chat,
+  type ChatWithForm,
   chat,
   type DBMessage,
   document,
@@ -172,8 +174,17 @@ export async function getChatsByUserId({
 
     const query = (whereCondition?: SQL<any>) =>
       db
-        .select()
+        .select({
+          id: chat.id,
+          createdAt: chat.createdAt,
+          title: chat.title,
+          userId: chat.userId,
+          visibility: chat.visibility,
+          lastContext: chat.lastContext,
+          hasForm: sql<boolean>`${form.id} IS NOT NULL`.as("hasForm"),
+        })
         .from(chat)
+        .leftJoin(form, eq(form.chatId, chat.id))
         .where(
           whereCondition
             ? and(whereCondition, eq(chat.userId, id))
@@ -182,7 +193,7 @@ export async function getChatsByUserId({
         .orderBy(desc(chat.createdAt))
         .limit(extendedLimit);
 
-    let filteredChats: Chat[] = [];
+    let filteredChats: ChatWithForm[] = [];
 
     if (startingAfter) {
       const [selectedChat] = await db
