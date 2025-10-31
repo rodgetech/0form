@@ -33,7 +33,6 @@ export const finalizeForm = ({ session, chatId }: FinalizeFormProps) =>
 
       return {
         formId: form.id,
-        message: `✅ Form saved successfully!\n\n**${title}** is now ready to share.\n\nForm ID: ${form.id}`,
       };
     },
   });

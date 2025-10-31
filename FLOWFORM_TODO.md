@@ -130,35 +130,37 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 
 ### 2.3 In-Chat Form Status Display
 
-- 🔄 **Task 2.3.0:** Create form preview component for in-chat visualization
+- ✅ **Task 2.3.0:** Create form preview component for in-chat visualization
 
   - New files: `components/flowform/form-preview.tsx` and `components/flowform/form-field-preview.tsx`
   - Shows beautiful read-only form UI (like weather widget) when AI generates schema
   - Displays all form fields with appropriate input components
   - Source of truth: FormSchema from AI tool (no modifications)
   - Follows AI SDK generative UI pattern (handler in message.tsx)
+  - Fixed prompt to prevent AI from outputting JSON in text response
 
-- ⬜ **Task 2.3.1:** Create form status card component
+- ✅ **Task 2.3.1:** Create form status card component
 
   - New file: `components/flowform/form-status-card.tsx`
-  - Shows when form is published (appears inline in chat)
-  - Displays:
-    - ✅ Form published
-    - 📋 Form title
-    - 🔗 Shareable link with copy-to-clipboard
-    - 📊 "View X Submissions" button (links to submissions page)
-    - ⚙️ Settings/edit link
+  - Shows when form is published via `tool-finalizeForm` handler
+  - Compact action bar displaying:
+    - ✅ Form published confirmation with CheckCircleFillIcon
+    - 🔗 Shareable link in read-only input field
+    - 📋 Copy-to-clipboard button with toast notification
+  - Follows AI SDK generative UI pattern (handler in message.tsx)
+  - Uses existing shadcn/ui components and patterns
+  - Removed message property from finalizeForm tool for clean output
 
-- ⬜ **Task 2.3.2:** Integrate status card into chat UI
+- ✅ **Task 2.3.2:** Integrate status card into chat UI
 
-  - Detect when chat has associated published form
-  - Render form status card at top or bottom of chat
-  - Update in real-time when submissions come in
+  - Integrated via `tool-finalizeForm` handler in message.tsx
+  - FormStatusCard renders inline when form is finalized
+  - Completed as part of Task 2.3.1 implementation
 
-- ⬜ **Task 2.3.3:** Generate shareable form URL
-  - Format: `/form/[formId]` or `/f/[formId]`
-  - Copy-to-clipboard functionality with toast notification
-  - Show full URL (e.g., `https://flowform.ai/form/abc-123`)
+- ✅ **Task 2.3.3:** Generate shareable form URL
+  - URL format: `${window.location.origin}/form/${formId}` (works for localhost and production)
+  - Copy-to-clipboard with toast notification implemented in FormStatusCard
+  - Completed as part of Task 2.3.1 implementation
 
 ### 2.4 Chat Sidebar Updates (Form History)
 

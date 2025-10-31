@@ -19,6 +19,7 @@ import {
   ToolOutput,
 } from "./elements/tool";
 import { FormPreview } from "./flowform/form-preview";
+import { FormStatusCard } from "./flowform/form-status-card";
 import { SparklesIcon } from "./icons";
 import { MessageActions } from "./message-actions";
 import { MessageEditor } from "./message-editor";
@@ -209,6 +210,35 @@ const PurePreviewMessage = ({
                           "schema" in part.output &&
                           part.output.schema ? (
                             <FormPreview schema={part.output.schema} />
+                          ) : null
+                        }
+                      />
+                    )}
+                  </ToolContent>
+                </Tool>
+              );
+            }
+
+            if (type === "tool-finalizeForm") {
+              const { toolCallId, state } = part;
+
+              return (
+                <Tool defaultOpen={true} key={toolCallId}>
+                  <ToolHeader state={state} type="tool-finalizeForm" />
+                  <ToolContent>
+                    {state === "input-available" && (
+                      <ToolInput input={part.input} />
+                    )}
+                    {state === "output-available" && (
+                      <ToolOutput
+                        errorText={
+                          part.output && "error" in part.output
+                            ? String(part.output.error)
+                            : undefined
+                        }
+                        output={
+                          part.output && "formId" in part.output ? (
+                            <FormStatusCard formId={part.output.formId} />
                           ) : null
                         }
                       />
