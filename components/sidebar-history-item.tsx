@@ -126,5 +126,8 @@ export const ChatItem = memo(PureChatItem, (prevProps, nextProps) => {
   if (prevProps.isActive !== nextProps.isActive) {
     return false;
   }
+  if (prevProps.chat.hasForm !== nextProps.chat.hasForm) {
+    return false;
+  }
   return true;
 });
