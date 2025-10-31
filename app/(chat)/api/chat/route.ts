@@ -23,6 +23,8 @@ import type { ChatModel } from "@/lib/ai/models";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { myProvider } from "@/lib/ai/providers";
 import { createDocument } from "@/lib/ai/tools/create-document";
+import { finalizeForm } from "@/lib/ai/tools/finalize-form";
+import { generateFormSchema } from "@/lib/ai/tools/generate-form-schema";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { updateDocument } from "@/lib/ai/tools/update-document";
@@ -188,6 +190,8 @@ export async function POST(request: Request) {
                   "createDocument",
                   "updateDocument",
                   "requestSuggestions",
+                  "generateFormSchema",
+                  "finalizeForm",
                 ],
           experimental_transform: smoothStream({ chunking: "word" }),
           tools: {
@@ -198,6 +202,11 @@ export async function POST(request: Request) {
               session,
               dataStream,
             }),
+            generateFormSchema: generateFormSchema({
+              session,
+              dataStream,
+            }),
+            finalizeForm: finalizeForm({ session, chatId: id }),
           },
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,

@@ -29,29 +29,29 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 
 ### 1.1 Database Schema Design
 
-- ⬜ **Task 1.1.1:** Design `Form` table schema
+- ✅ **Task 1.1.1:** Design `Form` table schema
 
   - Fields: id, chatId (references Chat.id), userId, title, description, schema (JSONB), tone, isActive, createdAt, updatedAt
   - Links each form to its creation conversation (Chat)
   - Add to `lib/db/schema.ts`
 
-- ⬜ **Task 1.1.2:** Design `FormSubmission` table schema
+- ✅ **Task 1.1.2:** Design `FormSubmission` table schema
 
   - Fields: id, formId, submittedAt, responses (JSONB), metadata (JSONB)
   - No userId needed (submissions can be anonymous)
   - responses JSONB stores field-value pairs matching form schema
 
-- ⬜ **Task 1.1.3:** Design `FormFile` table schema
+- ✅ **Task 1.1.3:** Design `FormFile` table schema
 
   - Fields: id, submissionId, formId, fieldName, blobUrl, fileName, fileSize, mimeType, uploadedAt
   - Links to Vercel Blob storage URLs for uploaded files
 
-- ⬜ **Task 1.1.4:** Generate Drizzle migrations
+- ✅ **Task 1.1.4:** Generate Drizzle migrations
 
   - Run `pnpm db:generate`
   - Review generated SQL files
 
-- ⬜ **Task 1.1.5:** Run migrations locally
+- ✅ **Task 1.1.5:** Run migrations locally
   - Run `pnpm db:migrate`
   - Verify tables created in Drizzle Studio (`pnpm db:studio`)
 
@@ -61,7 +61,7 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 
 ### 2.1 System Prompts & AI Configuration
 
-- ⬜ **Task 2.1.1:** Create system prompt for form creation
+- ✅ **Task 2.1.1:** Create system prompt for form creation
 
   - Add to `lib/ai/prompts.ts`
   - Guide AI to ask: "What form would you like to create?"
@@ -69,7 +69,7 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
   - Guide AI to suggest improvements (e.g., "Would you like me to add an NPS question?")
   - Include examples from PRD (customer feedback, job application)
 
-- ⬜ **Task 2.1.2:** Create AI tool for schema generation
+- ✅ **Task 2.1.2:** Create AI tool for schema generation
 
   - New file: `lib/ai/tools/generate-form-schema.ts`
   - Input: User's natural language description
@@ -96,14 +96,16 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
     ```
   - Register tool in chat route
 
-- ⬜ **Task 2.1.3:** Add iterative refinement flow
-  - AI asks clarifying questions if description is vague
-  - User can review, approve, or modify generated schema
-  - Support multiple iterations before finalizing
+- ✅ **Task 2.1.3:** Add iterative refinement flow
+  - Separated schema generation from form creation (two tools: `generateFormSchema` + `finalizeForm`)
+  - `generateFormSchema` creates draft/preview (not saved to DB)
+  - Users can iterate freely with AI making adjustments
+  - `finalizeForm` only called when user explicitly approves
+  - Updated `formCreationPrompt` with clear workflow instructions
 
 ### 2.2 Form Persistence
 
-- ⬜ **Task 2.2.1:** Create database queries for forms
+- ✅ **Task 2.2.1:** Create database queries for forms
 
   - Add to `lib/db/queries.ts`
   - `createForm({ chatId, userId, schema, title, tone })`
@@ -113,18 +115,18 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
   - `updateForm({ id, schema, isActive })`
   - `deleteForm({ id })` - cascade delete submissions
 
-- ⬜ **Task 2.2.2:** Create API route for form operations
+- ✅ **Task 2.2.2:** Create API route for form operations
 
-  - `app/api/forms/route.ts`
-  - POST: Create/save new form (called when user finalizes schema)
-  - GET: List user's forms
-  - PUT: Update form schema/settings
-  - DELETE: Delete form
+  - `app/api/forms/route.ts` - GET (list forms), POST (create form)
+  - `app/api/forms/[id]/route.ts` - GET (single form), PATCH (update), DELETE
+  - `app/api/forms/schema.ts` - Zod validation schemas
+  - Follows existing API patterns: auth checks, ChatSDKError, validation
 
-- ⬜ **Task 2.2.3:** Link form to chat conversation
-  - When form is finalized, create Form record with current `chatId`
-  - Update Chat title to form name (e.g., "Customer Feedback Form")
-  - Store Form.id reference for easy lookup
+- ✅ **Task 2.2.3:** Link form to chat conversation
+  - When form schema is generated, automatically create Form record with `chatId`
+  - Form title/description/tone extracted from generated schema
+  - Modified `generateFormSchema` tool to call `createForm()` after generation
+  - Chat title remains unchanged (no sync needed)
 
 ### 2.3 In-Chat Form Status Display
 
@@ -749,12 +751,12 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 ## Progress Summary
 
 **Total Core Tasks:** 67 (down from 78 due to simplification)
-**Completed:** 0
+**Completed:** 11
 **In Progress:** 0
-**Not Started:** 67
+**Not Started:** 56
 
-**Current Phase:** Phase 1 - Database Schema & Core Models
-**Next Milestone:** Complete database schema design and run first migrations
+**Current Phase:** Phase 2 - Form Creation Flow (Creator Side) 🔄 IN PROGRESS
+**Next Milestone:** Form Persistence & Database Queries
 
 **Estimated Timeline:**
 

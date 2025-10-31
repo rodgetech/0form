@@ -2,6 +2,8 @@ import type { InferUITool, UIMessage } from "ai";
 import { z } from "zod";
 import type { ArtifactKind } from "@/components/artifact";
 import type { createDocument } from "./ai/tools/create-document";
+import type { finalizeForm } from "./ai/tools/finalize-form";
+import type { generateFormSchema } from "./ai/tools/generate-form-schema";
 import type { getWeather } from "./ai/tools/get-weather";
 import type { requestSuggestions } from "./ai/tools/request-suggestions";
 import type { updateDocument } from "./ai/tools/update-document";
@@ -22,12 +24,18 @@ type updateDocumentTool = InferUITool<ReturnType<typeof updateDocument>>;
 type requestSuggestionsTool = InferUITool<
   ReturnType<typeof requestSuggestions>
 >;
+type generateFormSchemaTool = InferUITool<
+  ReturnType<typeof generateFormSchema>
+>;
+type finalizeFormTool = InferUITool<ReturnType<typeof finalizeForm>>;
 
 export type ChatTools = {
   getWeather: weatherTool;
   createDocument: createDocumentTool;
   updateDocument: updateDocumentTool;
   requestSuggestions: requestSuggestionsTool;
+  generateFormSchema: generateFormSchemaTool;
+  finalizeForm: finalizeFormTool;
 };
 
 export type CustomUIDataTypes = {
@@ -35,6 +43,7 @@ export type CustomUIDataTypes = {
   imageDelta: string;
   sheetDelta: string;
   codeDelta: string;
+  formSchemaDelta: unknown;
   suggestion: Suggestion;
   appendMessage: string;
   id: string;
