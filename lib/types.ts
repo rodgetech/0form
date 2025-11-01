@@ -4,6 +4,7 @@ import type { ArtifactKind } from "@/components/artifact";
 import type { createDocument } from "./ai/tools/create-document";
 import type { finalizeForm } from "./ai/tools/finalize-form";
 import type { generateFormSchema } from "./ai/tools/generate-form-schema";
+import type { getForm } from "./ai/tools/get-form";
 import type { getWeather } from "./ai/tools/get-weather";
 import type { requestSuggestions } from "./ai/tools/request-suggestions";
 import type { toggleFormStatus } from "./ai/tools/toggle-form-status";
@@ -30,6 +31,7 @@ type generateFormSchemaTool = InferUITool<
   ReturnType<typeof generateFormSchema>
 >;
 type updateFormSchemaTool = InferUITool<ReturnType<typeof updateFormSchema>>;
+type getFormTool = InferUITool<ReturnType<typeof getForm>>;
 type toggleFormStatusTool = InferUITool<ReturnType<typeof toggleFormStatus>>;
 type finalizeFormTool = InferUITool<ReturnType<typeof finalizeForm>>;
 
@@ -40,6 +42,7 @@ export type ChatTools = {
   requestSuggestions: requestSuggestionsTool;
   generateFormSchema: generateFormSchemaTool;
   updateFormSchema: updateFormSchemaTool;
+  getForm: getFormTool;
   toggleFormStatus: toggleFormStatusTool;
   finalizeForm: finalizeFormTool;
 };

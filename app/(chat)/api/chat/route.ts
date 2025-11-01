@@ -25,6 +25,7 @@ import { myProvider } from "@/lib/ai/providers";
 import { createDocument } from "@/lib/ai/tools/create-document";
 import { finalizeForm } from "@/lib/ai/tools/finalize-form";
 import { generateFormSchema } from "@/lib/ai/tools/generate-form-schema";
+import { getForm } from "@/lib/ai/tools/get-form";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { toggleFormStatus } from "@/lib/ai/tools/toggle-form-status";
@@ -194,6 +195,7 @@ export async function POST(request: Request) {
                   "requestSuggestions",
                   "generateFormSchema",
                   "updateFormSchema",
+                  "getForm",
                   "toggleFormStatus",
                   "finalizeForm",
                 ],
@@ -215,6 +217,7 @@ export async function POST(request: Request) {
               dataStream,
               chatId: id,
             }),
+            getForm: getForm({ session, chatId: id }),
             toggleFormStatus: toggleFormStatus({ session, chatId: id }),
             finalizeForm: finalizeForm({ session, chatId: id }),
           },

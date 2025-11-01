@@ -250,6 +250,37 @@ const PurePreviewMessage = ({
               );
             }
 
+            if (type === "tool-getForm") {
+              const { toolCallId, state } = part;
+
+              return (
+                <Tool defaultOpen={true} key={toolCallId}>
+                  <ToolHeader state={state} type="tool-getForm" />
+                  <ToolContent>
+                    {state === "input-available" && (
+                      <ToolInput input={part.input} />
+                    )}
+                    {state === "output-available" && (
+                      <ToolOutput
+                        errorText={
+                          part.output && "error" in part.output
+                            ? String(part.output.error)
+                            : undefined
+                        }
+                        output={
+                          part.output &&
+                          "schema" in part.output &&
+                          part.output.schema ? (
+                            <FormPreview schema={part.output.schema} />
+                          ) : null
+                        }
+                      />
+                    )}
+                  </ToolContent>
+                </Tool>
+              );
+            }
+
             if (type === "tool-toggleFormStatus") {
               const { toolCallId, state } = part;
 
