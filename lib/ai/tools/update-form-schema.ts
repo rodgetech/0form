@@ -129,9 +129,7 @@ export const updateFormSchema = ({
       additionalContext: z
         .string()
         .optional()
-        .describe(
-          "Additional context or clarifications from the conversation"
-        ),
+        .describe("Additional context or clarifications from the conversation"),
     }),
     execute: async ({ modificationDescription, additionalContext }) => {
       // Fetch the existing form
@@ -182,7 +180,8 @@ Return the complete updated form schema.`;
       const { fullStream } = streamObject({
         model: myProvider.languageModel("artifact-model"),
         system: systemPrompt,
-        prompt: `Apply the requested changes to generate the complete updated form schema.`,
+        prompt:
+          "Apply the requested changes to generate the complete updated form schema.",
         schema: formSchemaOutputSchema,
       });
 

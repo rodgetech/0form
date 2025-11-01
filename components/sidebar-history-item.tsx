@@ -50,11 +50,7 @@ const PureChatItem = ({
           href={`/chat/${chat.id}`}
           onClick={() => setOpenMobile(false)}
         >
-          {chat.hasForm && (
-            <CheckCircleFillIcon
-              size={14}
-            />
-          )}
+          {chat.hasForm && <CheckCircleFillIcon size={14} />}
           <span className="truncate">{chat.title}</span>
         </Link>
       </SidebarMenuButton>

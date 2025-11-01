@@ -223,24 +223,29 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 
 ### 3.1 Public Form Access
 
-- ⬜ **Task 3.1.1:** Create public form route
+- ✅ **Task 3.1.1:** Create public form route
 
-  - `app/(public)/form/[id]/page.tsx` or `app/f/[id]/page.tsx`
+  - Created `app/(forms)/[id]/page.tsx` (used existing forms route group)
   - No authentication required
-  - Load form schema from database
-  - New layout without auth UI elements
+  - Load form schema from database using `getFormById()`
+  - Created `app/(forms)/layout.tsx` - minimal layout with DataStreamProvider only
+  - Created `app/(forms)/api/forms/[id]/respond/route.ts` - public chat API endpoint
+  - Created `app/(forms)/api/forms/[id]/respond/schema.ts` - Zod validation schema
 
-- ⬜ **Task 3.1.2:** Add form validation checks
+- ✅ **Task 3.1.2:** Add form validation checks
 
-  - Check if form exists (show 404 if not)
-  - Check if form is active (show "Form closed" message if inactive)
-  - Optional: Track form views for analytics
+  - Check if form exists (show 404 if not) ✅
+  - Check if form is active (show "Form closed" message if inactive) ✅
+  - Optional: Track form views for analytics ⬜ (deferred to Phase 5)
 
-- ⬜ **Task 3.1.3:** Create public chat UI for respondents
-  - Simplified chat interface (no sidebar, no history)
-  - Shows form title and optional description
-  - Clean, minimal design focused on conversation
-  - Reuse chat components from `components/chat.tsx`
+- ✅ **Task 3.1.3:** Create public chat UI for respondents
+  - Created `components/flowform/public-chat.tsx`
+  - Simplified chat interface (no sidebar, no history) ✅
+  - Shows form title and optional description in header ✅
+  - Clean, minimal design focused on conversation ✅
+  - Reused chat components: Messages, MultimodalInput, DataStreamHandler ✅
+  - Fixed model selection ("chat-model") for public forms ✅
+  - Credit card alert handling ✅
 
 ### 3.2 Conversational Response Engine
 
@@ -803,12 +808,12 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 ## Progress Summary
 
 **Total Core Tasks:** 67 (down from 78 due to simplification)
-**Completed:** 11
+**Completed:** 14
 **In Progress:** 0
-**Not Started:** 56
+**Not Started:** 53
 
-**Current Phase:** Phase 2 - Form Creation Flow (Creator Side) 🔄 IN PROGRESS
-**Next Milestone:** Form Persistence & Database Queries
+**Current Phase:** Phase 3 - Form Response Flow (Respondent Side) 🔄 IN PROGRESS
+**Next Milestone:** Conversational Response Engine (Tasks 3.2.1 - 3.2.4)
 
 **Estimated Timeline:**
 
@@ -823,5 +828,5 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 
 ---
 
-_Last Updated: October 30, 2025_
+_Last Updated: October 31, 2025_
 _Updated By: Claude + Luis_

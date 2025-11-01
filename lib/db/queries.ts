@@ -181,7 +181,10 @@ export async function getChatsByUserId({
           userId: chat.userId,
           visibility: chat.visibility,
           lastContext: chat.lastContext,
-          hasForm: sql<boolean>`${form.id} IS NOT NULL AND ${form.isActive} IS TRUE`.as("hasForm"),
+          hasForm:
+            sql<boolean>`${form.id} IS NOT NULL AND ${form.isActive} IS TRUE`.as(
+              "hasForm"
+            ),
         })
         .from(chat)
         .leftJoin(form, eq(form.chatId, chat.id))
