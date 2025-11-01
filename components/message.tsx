@@ -271,7 +271,7 @@ const PurePreviewMessage = ({
                           part.output &&
                           "schema" in part.output &&
                           part.output.schema ? (
-                            <FormPreview schema={part.output.schema} />
+                            <FormPreview schema={part.output.schema as any} />
                           ) : null
                         }
                       />
