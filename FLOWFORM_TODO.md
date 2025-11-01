@@ -162,6 +162,42 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
   - Copy-to-clipboard with toast notification implemented in FormStatusCard
   - Completed as part of Task 2.3.1 implementation
 
+- ✅ **Task 2.3.4:** Add form update/edit functionality in chat
+
+  - Created `updateFormSchema` AI tool in `lib/ai/tools/update-form-schema.ts`
+  - Fetches existing form via `getFormByChatId()`, provides as context to AI
+  - User can say: "change the tone to professional", "add a phone number field", "make email optional"
+  - Generates complete updated schema with requested changes applied
+  - Shows updated FormPreview component (reused from generateFormSchema)
+  - Enhanced `finalizeForm` to auto-detect and update existing forms
+  - Registered tool in chat route and added rendering in message.tsx
+  - Updated prompts.ts with editing guidance and types.ts with tool definition
+  - Follows same preview-approve pattern as form creation
+
+- ✅ **Task 2.3.5:** Add unpublish/republish functionality
+
+  - Created `toggleFormStatus` AI tool in `lib/ai/tools/toggle-form-status.ts`
+  - Smart toggle: automatically detects current status and switches to opposite
+  - Uses existing `updateForm({ id, isActive })` query from Task 2.2.1
+  - User can say: "pause this form", "unpublish", "make it live again", "republish"
+  - Returns `{ formId, previousStatus, newStatus }` for UI display
+  - Registered tool in chat route and added rendering in message.tsx
+  - Updated prompts.ts with pause/unpublish guidance
+  - Updated types.ts with toggleFormStatusTool definition
+  - Shows status change in collapsed Tool component with styled message
+
+- ⬜ **Task 2.3.6:** Update FormStatusCard to support post-publish actions
+
+  - Enhance `components/flowform/form-status-card.tsx`
+  - Show current form status: "Published" (green) or "Paused" (yellow/gray)
+  - Add action prompts matching screenshot:
+    - "Would you like to:"
+    - "• Unpublish this form"
+    - "• Make changes to this form"
+    - "• Or are we all set for today?"
+  - Can be interactive buttons or AI conversation prompts
+  - Update to show "Form Paused" state when isActive = false
+
 ### 2.4 Chat Sidebar Updates (Form History)
 
 - ✅ **Task 2.4.1:** Update sidebar to show form status

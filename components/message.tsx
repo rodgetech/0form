@@ -219,6 +219,77 @@ const PurePreviewMessage = ({
               );
             }
 
+            if (type === "tool-updateFormSchema") {
+              const { toolCallId, state } = part;
+
+              return (
+                <Tool defaultOpen={true} key={toolCallId}>
+                  <ToolHeader state={state} type="tool-updateFormSchema" />
+                  <ToolContent>
+                    {state === "input-available" && (
+                      <ToolInput input={part.input} />
+                    )}
+                    {state === "output-available" && (
+                      <ToolOutput
+                        errorText={
+                          part.output && "error" in part.output
+                            ? String(part.output.error)
+                            : undefined
+                        }
+                        output={
+                          part.output &&
+                          "schema" in part.output &&
+                          part.output.schema ? (
+                            <FormPreview schema={part.output.schema} />
+                          ) : null
+                        }
+                      />
+                    )}
+                  </ToolContent>
+                </Tool>
+              );
+            }
+
+            if (type === "tool-toggleFormStatus") {
+              const { toolCallId, state } = part;
+
+              return (
+                <Tool defaultOpen={true} key={toolCallId}>
+                  <ToolHeader state={state} type="tool-toggleFormStatus" />
+                  <ToolContent>
+                    {state === "input-available" && (
+                      <ToolInput input={part.input} />
+                    )}
+                    {state === "output-available" && (
+                      <ToolOutput
+                        errorText={
+                          part.output && "error" in part.output
+                            ? String(part.output.error)
+                            : undefined
+                        }
+                        output={
+                          part.output &&
+                          "newStatus" in part.output &&
+                          "previousStatus" in part.output ? (
+                            <div className="rounded-md bg-muted p-3 text-sm">
+                              Form status updated from{" "}
+                              <strong className="font-semibold">
+                                {part.output.previousStatus}
+                              </strong>{" "}
+                              to{" "}
+                              <strong className="font-semibold">
+                                {part.output.newStatus}
+                              </strong>
+                            </div>
+                          ) : null
+                        }
+                      />
+                    )}
+                  </ToolContent>
+                </Tool>
+              );
+            }
+
             if (type === "tool-finalizeForm") {
               const { toolCallId, state } = part;
 

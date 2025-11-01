@@ -2,14 +2,16 @@ import { streamObject, tool, type UIMessageStreamWriter } from "ai";
 import type { Session } from "next-auth";
 import { z } from "zod";
 import { myProvider } from "@/lib/ai/providers";
+import { getFormByChatId } from "@/lib/db/queries";
 import type { ChatMessage } from "@/lib/types";
 
-type GenerateFormSchemaProps = {
+type UpdateFormSchemaProps = {
   session: Session;
   dataStream: UIMessageStreamWriter<ChatMessage>;
+  chatId: string;
 };
 
-// Define the form field schema with comprehensive validation
+// Reuse the same schemas from generate-form-schema.ts
 const formFieldSchema = z.object({
   name: z
     .string()
@@ -89,7 +91,6 @@ const formFieldSchema = z.object({
     .describe("Field-specific options for choice and scale fields"),
 });
 
-// Define the complete form schema structure
 const formSchemaOutputSchema = z.object({
   title: z.string().describe("The form title (e.g., 'Customer Feedback Form')"),
   description: z
@@ -111,87 +112,77 @@ const formSchemaOutputSchema = z.object({
 export type FormField = z.infer<typeof formFieldSchema>;
 export type FormSchema = z.infer<typeof formSchemaOutputSchema>;
 
-export const generateFormSchema = ({
+export const updateFormSchema = ({
   session,
   dataStream,
-}: GenerateFormSchemaProps) =>
+  chatId,
+}: UpdateFormSchemaProps) =>
   tool({
     description:
-      "Generate a conversational form schema based on the user's natural language description. Use this for NEW forms AND for making changes during the iteration phase (before the form is finalized). You can call this tool multiple times with the additionalContext parameter to refine the schema based on user feedback. Once the user approves, call finalizeForm to save it. Do NOT use this when the user approves - use finalizeForm instead. Do NOT use this for editing forms that have already been finalized - use updateFormSchema for that.",
+      "Update a FINALIZED form schema that has been saved to the database. IMPORTANT: Only use this tool for forms that have been finalized (finalizeForm was called). Do NOT use this during the iteration phase when building a new form - use generateFormSchema with additionalContext instead. This tool fetches the existing form from the database, applies the requested changes, and returns the complete updated schema. After showing the preview, wait for user approval before calling finalizeForm.",
     inputSchema: z.object({
-      description: z
+      modificationDescription: z
         .string()
         .describe(
-          "The user's natural language description of what data they want to collect (e.g., 'I need customer feedback with name, email, and satisfaction rating 1-5')"
+          "The user's description of what changes they want to make (e.g., 'change the tone to professional', 'add a phone number field', 'change rating scale from 1-5 to 1-10')"
         ),
       additionalContext: z
         .string()
         .optional()
         .describe(
-          "Additional context, refinements, or modifications from the conversation (e.g., 'add an NPS question')"
+          "Additional context or clarifications from the conversation"
         ),
     }),
-    execute: async ({ description, additionalContext }) => {
-      let generatedSchema: z.infer<typeof formSchemaOutputSchema> | null = null;
+    execute: async ({ modificationDescription, additionalContext }) => {
+      // Fetch the existing form
+      const existingForm = await getFormByChatId({ chatId });
 
-      const systemPrompt = `You are an expert form designer specializing in conversational data collection. Your task is to generate a comprehensive, user-friendly form schema.
+      if (!existingForm) {
+        return {
+          error:
+            "No form found in this chat. Please create a form first using generateFormSchema.",
+        };
+      }
 
-**Analysis Guidelines:**
-- Carefully analyze the description to identify all fields
-- Infer appropriate field types based on context:
-  * "email" → email type with validation
-  * "rating", "satisfaction", "NPS" → scale type
-  * "resume", "CV", "document" → file type
-  * "date", "birthday", "when" → date type
-  * "comments", "feedback", "description" → longtext type
-  * "website", "portfolio" → url type
-  * "choose", "select", "which" → choice type
-  * Numbers/age/quantity → number type
-  * Everything else → text type
+      let updatedSchema: z.infer<typeof formSchemaOutputSchema> | null = null;
 
-**Field Naming:**
-- Use snake_case for field names (e.g., "full_name", "email_address", "satisfaction_rating")
-- Keep names descriptive but concise
+      const systemPrompt = `You are updating an existing form schema based on the user's modification request.
 
-**Labels:**
-- Write labels as conversational questions (e.g., "What's your email?" not just "Email")
-- Be friendly and clear
+**Current Form:**
+Title: ${existingForm.title}
+Description: ${existingForm.description || "None"}
+Tone: ${existingForm.tone}
+Schema: ${JSON.stringify(existingForm.schema, null, 2)}
 
-**Validation:**
-- Always add email pattern validation for email fields
-- Add min/max for scale fields (e.g., 1-5, 0-10)
-- Suggest reasonable file types for file uploads (e.g., ['.pdf', '.docx'] for resumes)
-- Add min/max for number fields when it makes sense
+**User's Modification Request:**
+${modificationDescription}${additionalContext ? `\n\nAdditional context: ${additionalContext}` : ""}
 
-**Scale Fields:**
-- For satisfaction ratings: Use 1-5 scale with labels ["Not satisfied", "Very satisfied"]
-- For NPS questions: Use 0-10 scale with labels ["Not at all likely", "Extremely likely"]
-- For general ratings: Use appropriate scale and labels
+**Your Task:**
+Generate the COMPLETE updated form schema with the requested changes applied.
 
-**Required Fields:**
-- Make contact info (name, email) required by default
-- Make core form fields required unless user specifies optional
-- Allow flexibility for optional supplementary fields
+**Important Guidelines:**
+- Apply ONLY the requested changes
+- Preserve all unchanged fields exactly as they are
+- Maintain the same field order unless the user requests reordering
+- If adding fields, place them logically (contact info together, ratings together, etc.)
+- If removing fields, ensure the form still makes sense
+- If modifying field types, ensure validation rules are updated appropriately
+- If changing the tone, keep all other properties the same
+- Generate a complete, valid schema ready for preview
 
-**Tone Selection:**
-- Customer feedback, casual surveys → friendly
-- Job applications, business forms → professional
-- Event registrations, fun surveys → playful
-- Legal forms, official documents → formal
+**Validation Rules:**
+- Email fields must have email pattern validation
+- Scale fields must have min/max in options
+- Choice fields must have choices array
+- File fields should have acceptedTypes
+- Required fields must be marked appropriately
 
-**Field Count:**
-- Keep forms concise (5-8 fields ideal)
-- Don't add unnecessary fields
-- Focus on what the user explicitly requested
-
-Generate a clean, production-ready form schema.`;
+Return the complete updated form schema.`;
 
       const { fullStream } = streamObject({
         model: myProvider.languageModel("artifact-model"),
         system: systemPrompt,
-        prompt: additionalContext
-          ? `${description}\n\nAdditional requirements: ${additionalContext}`
-          : description,
+        prompt: `Apply the requested changes to generate the complete updated form schema.`,
         schema: formSchemaOutputSchema,
       });
 
@@ -200,7 +191,7 @@ Generate a clean, production-ready form schema.`;
 
         if (type === "object") {
           const { object } = delta;
-          generatedSchema = object as z.infer<typeof formSchemaOutputSchema>;
+          updatedSchema = object as z.infer<typeof formSchemaOutputSchema>;
 
           // Stream progressive updates to the UI
           dataStream.write({
@@ -211,14 +202,14 @@ Generate a clean, production-ready form schema.`;
         }
       }
 
-      if (!generatedSchema) {
+      if (!updatedSchema) {
         return {
-          error: "Failed to generate form schema. Please try again.",
+          error: "Failed to update form schema. Please try again.",
         };
       }
 
       return {
-        schema: generatedSchema,
+        schema: updatedSchema,
       };
     },
   });

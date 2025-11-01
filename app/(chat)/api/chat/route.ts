@@ -27,7 +27,9 @@ import { finalizeForm } from "@/lib/ai/tools/finalize-form";
 import { generateFormSchema } from "@/lib/ai/tools/generate-form-schema";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
+import { toggleFormStatus } from "@/lib/ai/tools/toggle-form-status";
 import { updateDocument } from "@/lib/ai/tools/update-document";
+import { updateFormSchema } from "@/lib/ai/tools/update-form-schema";
 import { isProductionEnvironment } from "@/lib/constants";
 import {
   createStreamId,
@@ -191,6 +193,8 @@ export async function POST(request: Request) {
                   "updateDocument",
                   "requestSuggestions",
                   "generateFormSchema",
+                  "updateFormSchema",
+                  "toggleFormStatus",
                   "finalizeForm",
                 ],
           experimental_transform: smoothStream({ chunking: "word" }),
@@ -206,6 +210,12 @@ export async function POST(request: Request) {
               session,
               dataStream,
             }),
+            updateFormSchema: updateFormSchema({
+              session,
+              dataStream,
+              chatId: id,
+            }),
+            toggleFormStatus: toggleFormStatus({ session, chatId: id }),
             finalizeForm: finalizeForm({ session, chatId: id }),
           },
           experimental_telemetry: {
