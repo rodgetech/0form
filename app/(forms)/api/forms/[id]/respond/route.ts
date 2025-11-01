@@ -6,7 +6,10 @@ import {
   stepCountIs,
   streamText,
 } from "ai";
+import { formFillingPrompt } from "@/lib/ai/prompts";
 import { myProvider } from "@/lib/ai/providers";
+import { collectFieldResponse } from "@/lib/ai/tools/collect-field-response";
+import { submitFormResponse } from "@/lib/ai/tools/submit-form-response";
 import { getFormById } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
 import type { ChatMessage } from "@/lib/types";
@@ -23,7 +26,7 @@ export async function POST(
   const { id: formId } = params;
 
   // Validate request body
-  let requestBody: { message: ChatMessage };
+  let requestBody: { messages: ChatMessage[] };
 
   try {
     const json = await request.json();
@@ -33,7 +36,7 @@ export async function POST(
   }
 
   try {
-    const { message } = requestBody;
+    const { messages: clientMessages } = requestBody;
 
     // Load form from database
     const form = await getFormById({ id: formId });
@@ -48,29 +51,38 @@ export async function POST(
       return new ChatSDKError("forbidden:form_inactive").toResponse();
     }
 
-    // TODO: For now, we'll just echo messages back
-    // In the next steps, we'll add:
-    // - Form filling system prompt
-    // - Response collection tools
-    // - State management for collected fields
-    // - Submission handling
+    // Parse form schema for the prompt
+    const schema = form.schema as {
+      fields: Array<{
+        name: string;
+        type: string;
+        label: string;
+        required: boolean;
+        options?: Record<string, unknown>;
+      }>;
+    };
 
     const stream = createUIMessageStream({
       execute: ({ writer: dataStream }) => {
         const result = streamText({
           model: myProvider.languageModel("chat-model"),
-          system: `You are a friendly assistant helping users fill out a form titled "${form.title}".
-
-Form description: ${form.description || "No description provided"}
-
-Your tone should be: ${form.tone}
-
-For now, just acknowledge their message warmly and let them know you're here to help them fill out the form.`,
-          messages: convertToModelMessages([message]),
-          stopWhen: stepCountIs(5),
-          experimental_activeTools: [],
+          system: formFillingPrompt({
+            title: form.title,
+            description: form.description ?? undefined,
+            fields: schema.fields,
+            tone: form.tone,
+          }),
+          messages: convertToModelMessages(clientMessages),
+          stopWhen: stepCountIs(10),
+          experimental_activeTools: [
+            "collectFieldResponse",
+            "submitFormResponse",
+          ],
           experimental_transform: smoothStream({ chunking: "word" }),
-          tools: {},
+          tools: {
+            collectFieldResponse: collectFieldResponse({ form }),
+            submitFormResponse: submitFormResponse({ form }),
+          },
         });
 
         result.consumeStream();
@@ -83,12 +95,13 @@ For now, just acknowledge their message warmly and let them know you're here to 
       },
       generateId: generateUUID,
       onFinish: ({ messages }) => {
-        // TODO: Save messages/responses to database
-        // This will be implemented in later steps when we add:
-        // - FormSubmission tracking
-        // - Response collection state
-        // - Field mapping logic
-        console.log("Form response messages:", messages);
+        // Form submissions are handled by the submitFormResponse tool
+        // No additional processing needed here
+        console.log(
+          "Form conversation completed:",
+          messages.length,
+          "messages"
+        );
       },
       onError: () => {
         return "Oops, an error occurred!";

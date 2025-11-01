@@ -2,7 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDataStream } from "@/components/data-stream-provider";
 import { Messages } from "@/components/messages";
 import { MultimodalInput } from "@/components/multimodal-input";
@@ -42,7 +42,7 @@ export function PublicChat({
         prepareSendMessagesRequest(request) {
           return {
             body: {
-              message: request.messages.at(-1),
+              messages: request.messages,
               ...request.body,
             },
           };
@@ -72,6 +72,19 @@ export function PublicChat({
     });
 
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [hasInitialized, setHasInitialized] = useState(false);
+
+  // Auto-send initial greeting message on form load
+  useEffect(() => {
+    if (!hasInitialized && messages.length === 0) {
+      // Send a minimal trigger message to start the conversation
+      sendMessage({
+        role: "user" as const,
+        parts: [{ type: "text", text: "Hi" }],
+      });
+      setHasInitialized(true);
+    }
+  }, [hasInitialized, messages.length, sendMessage]);
 
   return (
     <div className="overscroll-behavior-contain flex h-dvh min-w-0 touch-pan-y flex-col bg-background">
@@ -105,6 +118,7 @@ export function PublicChat({
         <MultimodalInput
           attachments={attachments}
           chatId={formId}
+          enableUrlNavigation={false}
           input={input}
           messages={messages}
           onModelChange={() => {

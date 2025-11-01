@@ -34,6 +34,7 @@ type updateFormSchemaTool = InferUITool<ReturnType<typeof updateFormSchema>>;
 type getFormTool = InferUITool<ReturnType<typeof getForm>>;
 type toggleFormStatusTool = InferUITool<ReturnType<typeof toggleFormStatus>>;
 type finalizeFormTool = InferUITool<ReturnType<typeof finalizeForm>>;
+// collectFieldResponse and submitFormResponse are used in form respond route only, not in ChatTools
 
 export type ChatTools = {
   getWeather: weatherTool;

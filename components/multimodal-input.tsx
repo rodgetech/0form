@@ -63,6 +63,7 @@ function PureMultimodalInput({
   selectedModelId,
   onModelChange,
   usage,
+  enableUrlNavigation = true,
 }: {
   chatId: string;
   input: string;
@@ -79,6 +80,7 @@ function PureMultimodalInput({
   selectedModelId: string;
   onModelChange?: (modelId: string) => void;
   usage?: AppUsage;
+  enableUrlNavigation?: boolean;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -130,7 +132,9 @@ function PureMultimodalInput({
   const [uploadQueue, setUploadQueue] = useState<string[]>([]);
 
   const submitForm = useCallback(() => {
-    window.history.replaceState({}, "", `/chat/${chatId}`);
+    if (enableUrlNavigation) {
+      window.history.replaceState({}, "", `/chat/${chatId}`);
+    }
 
     sendMessage({
       role: "user",
@@ -166,6 +170,7 @@ function PureMultimodalInput({
     width,
     chatId,
     resetHeight,
+    enableUrlNavigation,
   ]);
 
   const uploadFile = useCallback(async (file: File) => {

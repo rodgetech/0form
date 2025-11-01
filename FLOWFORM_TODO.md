@@ -249,39 +249,58 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 
 ### 3.2 Conversational Response Engine
 
-- ⬜ **Task 3.2.1:** Create conversation orchestrator
+- ✅ **Task 3.2.1 & 3.2.2:** Conversational form filling implementation (Hybrid Approach)
 
-  - New file: `lib/flowform/conversation-engine.ts`
-  - Takes form schema as input
-  - Generates conversational questions in logical order
-  - Tracks collection state: `{ email: "collected", rating: "pending", feedback: "pending" }`
-  - Decides which field to ask next based on context
+  - **Decision:** Skipped separate orchestrator file - used simplified hybrid approach
+  - **AI-Guided:** Updated `formFillingPrompt` in `lib/ai/prompts.ts`
+    - Injects form schema (title, description, fields, tone)
+    - Instructions for asking fields in order
+    - Tool usage guidance (collectFieldResponse, submitFormResponse)
+    - Tone adaptation based on form.tone setting
+  - **Message History:** Implicitly tracks what's been collected
+  - **Session-Only State:** No persistence between visits (per user preference)
+  - **Field Ordering:** Schema order with intelligent flexibility
 
-- ⬜ **Task 3.2.2:** Create system prompt for form filling
+- ✅ **Task 3.2.3:** Implement response validation logic
 
-  - Add to `lib/ai/prompts.ts`
-  - Inject form schema and current state into prompt
-  - Instructions:
-    - Be friendly and conversational (adjust based on form.tone)
-    - Ask one question at a time
-    - Validate responses match expected type
-    - Map responses to schema fields
-    - Confirm all required fields before submission
-  - Example: "Great! Now, what's your email address?" → maps to `email` field
+  - Created `lib/ai/tools/validation.ts` with comprehensive validators:
+    - `validateEmail()` - Email regex pattern validation
+    - `validateUrl()` - URL format validation
+    - `validatePhone()` - Phone number validation
+    - `validateNumber()` - Number range validation (min/max)
+    - `validateDate()` - Date parsing validation
+    - `validateRequired()` - Non-empty check
+    - `validateChoice()` - Must match provided options
+    - `validateScale()` - Range validation for scale fields
+    - `validateFieldType()` - Main validator routing to specific validators
+  - Created `lib/ai/tools/collect-field-response.ts`:
+    - Tool that validates individual field responses
+    - Returns `{ valid: boolean, error?: string }`
+    - AI uses this after each user answer
+  - Validation errors trigger helpful re-prompting by AI
 
-- ⬜ **Task 3.2.3:** Implement response validation logic
+- ✅ **Task 3.2.4:** Add conversation state management
 
-  - Email validation (regex pattern)
-  - Number range validation (min/max)
-  - Required field enforcement
-  - URL format validation
-  - Date format validation
-  - AI asks for clarification if response doesn't match: "That doesn't look like a valid email. Could you double-check?"
-
-- ⬜ **Task 3.2.4:** Add conversation state management
-  - Track collected fields in memory during session
-  - Store partial responses (in case user refreshes?)
-  - Provide progress indicator: "3 of 5 questions answered"
+  - **State Storage:** Session-only (no database persistence)
+  - **Tracking Method:** Full message history passed to API (client-side state)
+  - **Tools Created:**
+    - `collectFieldResponse` - Validates each response in real-time
+    - `submitFormResponse` - Final validation + database save
+  - **Bug Fixes:**
+    - Fixed API route to accept full message history instead of single message
+    - Fixed schema validation to accept AI SDK message parts (step-start, state, etc.)
+    - Fixed URL redirect bug (form stayed on /f/{id} instead of redirecting to /chat/{id})
+    - Added `enableUrlNavigation` prop to MultimodalInput component
+  - **Prompt Refinement:**
+    - Removed verbose greetings and redundant confirmations
+    - Made AI responses concise (1-2 sentences max)
+    - Tool calls execute silently (no "I am validating..." messages)
+  - **Database Queries Added:**
+    - `createFormSubmission()` - Saves completed submissions
+    - `getSubmissionsByFormId()` - Retrieves submissions
+    - `getSubmissionCount()` - Count submissions
+  - **API Integration:** Wired up in `app/f/api/forms/[id]/respond/route.ts`
+  - **Progress Indicator:** Deferred to Phase 5 (keeping it conversational)
 
 ### 3.3 Smart UI Component Switching
 
@@ -808,12 +827,12 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 ## Progress Summary
 
 **Total Core Tasks:** 67 (down from 78 due to simplification)
-**Completed:** 14
+**Completed:** 29 (includes Phase 3.2 conversational response engine with bug fixes)
 **In Progress:** 0
-**Not Started:** 53
+**Not Started:** 38
 
 **Current Phase:** Phase 3 - Form Response Flow (Respondent Side) 🔄 IN PROGRESS
-**Next Milestone:** Conversational Response Engine (Tasks 3.2.1 - 3.2.4)
+**Next Milestone:** Smart UI Component Switching (Tasks 3.3.1 - 3.3.3) - Optional Enhancement
 
 **Estimated Timeline:**
 
