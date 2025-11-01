@@ -208,9 +208,14 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
   - Visual indicator: Green checkmark (14px) appears before chat title when form exists
   - No submission count in this phase (keeping it simple for now)
 
-- ⬜ **Task 2.4.2:** Add welcome message for first-time users
-  - When user starts first chat, AI says: "Welcome! I'll help you create conversational forms. What would you like to collect from your users?"
-  - Show example: "For example: 'I need customer feedback with name, email, and satisfaction rating'"
+- ✅ **Task 2.4.2:** Add welcome message for first-time users
+  - Updated starter templates in `components/suggested-actions.tsx` to form-related examples
+  - New templates guide users toward common form types:
+    - "Customer feedback form with rating and comments"
+    - "Event registration form"
+    - "Contact form with name, email, and message"
+    - "Job application form with resume upload"
+  - AI prompts already have Flowform-specific greeting logic in place
 
 ---
 
