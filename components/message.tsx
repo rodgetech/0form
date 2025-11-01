@@ -18,6 +18,8 @@ import {
   ToolInput,
   ToolOutput,
 } from "./elements/tool";
+import { FormPreview } from "./flowform/form-preview";
+import { FormStatusCard } from "./flowform/form-status-card";
 import { SparklesIcon } from "./icons";
 import { MessageActions } from "./message-actions";
 import { MessageEditor } from "./message-editor";
@@ -186,6 +188,168 @@ const PurePreviewMessage = ({
               );
             }
 
+            if (type === "tool-generateFormSchema") {
+              const { toolCallId, state } = part;
+
+              return (
+                <Tool defaultOpen={true} key={toolCallId}>
+                  <ToolHeader state={state} type="tool-generateFormSchema" />
+                  <ToolContent>
+                    {state === "input-available" && (
+                      <ToolInput input={part.input} />
+                    )}
+                    {state === "output-available" && (
+                      <ToolOutput
+                        errorText={
+                          part.output && "error" in part.output
+                            ? String(part.output.error)
+                            : undefined
+                        }
+                        output={
+                          part.output &&
+                          "schema" in part.output &&
+                          part.output.schema ? (
+                            <FormPreview schema={part.output.schema} />
+                          ) : null
+                        }
+                      />
+                    )}
+                  </ToolContent>
+                </Tool>
+              );
+            }
+
+            if (type === "tool-updateFormSchema") {
+              const { toolCallId, state } = part;
+
+              return (
+                <Tool defaultOpen={true} key={toolCallId}>
+                  <ToolHeader state={state} type="tool-updateFormSchema" />
+                  <ToolContent>
+                    {state === "input-available" && (
+                      <ToolInput input={part.input} />
+                    )}
+                    {state === "output-available" && (
+                      <ToolOutput
+                        errorText={
+                          part.output && "error" in part.output
+                            ? String(part.output.error)
+                            : undefined
+                        }
+                        output={
+                          part.output &&
+                          "schema" in part.output &&
+                          part.output.schema ? (
+                            <FormPreview schema={part.output.schema} />
+                          ) : null
+                        }
+                      />
+                    )}
+                  </ToolContent>
+                </Tool>
+              );
+            }
+
+            if (type === "tool-getForm") {
+              const { toolCallId, state } = part;
+
+              return (
+                <Tool defaultOpen={true} key={toolCallId}>
+                  <ToolHeader state={state} type="tool-getForm" />
+                  <ToolContent>
+                    {state === "input-available" && (
+                      <ToolInput input={part.input} />
+                    )}
+                    {state === "output-available" && (
+                      <ToolOutput
+                        errorText={
+                          part.output && "error" in part.output
+                            ? String(part.output.error)
+                            : undefined
+                        }
+                        output={
+                          part.output &&
+                          "schema" in part.output &&
+                          part.output.schema ? (
+                            <FormPreview schema={part.output.schema as any} />
+                          ) : null
+                        }
+                      />
+                    )}
+                  </ToolContent>
+                </Tool>
+              );
+            }
+
+            if (type === "tool-toggleFormStatus") {
+              const { toolCallId, state } = part;
+
+              return (
+                <Tool defaultOpen={true} key={toolCallId}>
+                  <ToolHeader state={state} type="tool-toggleFormStatus" />
+                  <ToolContent>
+                    {state === "input-available" && (
+                      <ToolInput input={part.input} />
+                    )}
+                    {state === "output-available" && (
+                      <ToolOutput
+                        errorText={
+                          part.output && "error" in part.output
+                            ? String(part.output.error)
+                            : undefined
+                        }
+                        output={
+                          part.output &&
+                          "newStatus" in part.output &&
+                          "previousStatus" in part.output ? (
+                            <div className="rounded-md bg-muted p-3 text-sm">
+                              Form status updated from{" "}
+                              <strong className="font-semibold">
+                                {part.output.previousStatus}
+                              </strong>{" "}
+                              to{" "}
+                              <strong className="font-semibold">
+                                {part.output.newStatus}
+                              </strong>
+                            </div>
+                          ) : null
+                        }
+                      />
+                    )}
+                  </ToolContent>
+                </Tool>
+              );
+            }
+
+            if (type === "tool-finalizeForm") {
+              const { toolCallId, state } = part;
+
+              return (
+                <Tool defaultOpen={true} key={toolCallId}>
+                  <ToolHeader state={state} type="tool-finalizeForm" />
+                  <ToolContent>
+                    {state === "input-available" && (
+                      <ToolInput input={part.input} />
+                    )}
+                    {state === "output-available" && (
+                      <ToolOutput
+                        errorText={
+                          part.output && "error" in part.output
+                            ? String(part.output.error)
+                            : undefined
+                        }
+                        output={
+                          part.output && "formId" in part.output ? (
+                            <FormStatusCard formId={part.output.formId} />
+                          ) : null
+                        }
+                      />
+                    )}
+                  </ToolContent>
+                </Tool>
+              );
+            }
+
             if (type === "tool-createDocument") {
               const { toolCallId } = part;
 
@@ -328,12 +492,9 @@ export const ThinkingMessage = () => {
         </div>
 
         <div className="flex w-full flex-col gap-2 md:gap-4">
-          <div className="p-0 text-muted-foreground text-sm">
-            Thinking...
-          </div>
+          <div className="p-0 text-muted-foreground text-sm">Thinking...</div>
         </div>
       </div>
     </motion.div>
   );
 };
-

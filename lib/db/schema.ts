@@ -35,6 +35,7 @@ export const chat = pgTable("Chat", {
 });
 
 export type Chat = InferSelectModel<typeof chat>;
+export type ChatWithForm = Chat & { hasForm: boolean };
 
 // DEPRECATED: The following schema is deprecated and will be removed in the future.
 // Read the migration guide at https://chat-sdk.dev/docs/migration-guides/message-parts
@@ -171,3 +172,58 @@ export const stream = pgTable(
 );
 
 export type Stream = InferSelectModel<typeof stream>;
+
+// FLOWFORM TABLES
+
+export const form = pgTable("Form", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  chatId: uuid("chatId")
+    .notNull()
+    .references(() => chat.id),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  schema: jsonb("schema").notNull(),
+  tone: varchar("tone", {
+    enum: ["friendly", "professional", "playful", "formal"],
+  })
+    .notNull()
+    .default("friendly"),
+  isActive: boolean("isActive").notNull().default(true),
+  createdAt: timestamp("createdAt").notNull(),
+  updatedAt: timestamp("updatedAt").notNull(),
+});
+
+export type Form = InferSelectModel<typeof form>;
+
+export const formSubmission = pgTable("FormSubmission", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  formId: uuid("formId")
+    .notNull()
+    .references(() => form.id, { onDelete: "cascade" }),
+  responses: jsonb("responses").notNull(),
+  metadata: jsonb("metadata"),
+  submittedAt: timestamp("submittedAt").notNull(),
+});
+
+export type FormSubmission = InferSelectModel<typeof formSubmission>;
+
+export const formFile = pgTable("FormFile", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  submissionId: uuid("submissionId")
+    .notNull()
+    .references(() => formSubmission.id, { onDelete: "cascade" }),
+  formId: uuid("formId")
+    .notNull()
+    .references(() => form.id, { onDelete: "cascade" }),
+  fieldName: text("fieldName").notNull(),
+  blobUrl: text("blobUrl").notNull(),
+  fileName: text("fileName").notNull(),
+  fileSize: varchar("fileSize").notNull(),
+  mimeType: varchar("mimeType").notNull(),
+  uploadedAt: timestamp("uploadedAt").notNull(),
+});
+
+export type FormFile = InferSelectModel<typeof formFile>;

@@ -11,6 +11,7 @@ import {
   inArray,
   lt,
   type SQL,
+  sql,
 } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
@@ -21,9 +22,12 @@ import type { AppUsage } from "../usage";
 import { generateUUID } from "../utils";
 import {
   type Chat,
+  type ChatWithForm,
   chat,
   type DBMessage,
   document,
+  type Form,
+  form,
   message,
   type Suggestion,
   stream,
@@ -134,7 +138,7 @@ export async function deleteAllChatsByUserId({ userId }: { userId: string }) {
       return { deletedCount: 0 };
     }
 
-    const chatIds = userChats.map(c => c.id);
+    const chatIds = userChats.map((c) => c.id);
 
     await db.delete(vote).where(inArray(vote.chatId, chatIds));
     await db.delete(message).where(inArray(message.chatId, chatIds));
@@ -170,8 +174,17 @@ export async function getChatsByUserId({
 
     const query = (whereCondition?: SQL<any>) =>
       db
-        .select()
+        .select({
+          id: chat.id,
+          createdAt: chat.createdAt,
+          title: chat.title,
+          userId: chat.userId,
+          visibility: chat.visibility,
+          lastContext: chat.lastContext,
+          hasForm: sql<boolean>`${form.id} IS NOT NULL AND ${form.isActive} IS TRUE`.as("hasForm"),
+        })
         .from(chat)
+        .leftJoin(form, eq(form.chatId, chat.id))
         .where(
           whereCondition
             ? and(whereCondition, eq(chat.userId, id))
@@ -180,7 +193,7 @@ export async function getChatsByUserId({
         .orderBy(desc(chat.createdAt))
         .limit(extendedLimit);
 
-    let filteredChats: Chat[] = [];
+    let filteredChats: ChatWithForm[] = [];
 
     if (startingAfter) {
       const [selectedChat] = await db
@@ -589,5 +602,137 @@ export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
       "bad_request:database",
       "Failed to get stream ids by chat id"
     );
+  }
+}
+
+// FLOWFORM QUERIES
+
+export async function createForm({
+  chatId,
+  userId,
+  title,
+  description,
+  schema,
+  tone = "friendly",
+}: {
+  chatId: string;
+  userId: string;
+  title: string;
+  description?: string;
+  schema: unknown;
+  tone?: "friendly" | "professional" | "playful" | "formal";
+}) {
+  try {
+    const now = new Date();
+    const [newForm] = await db
+      .insert(form)
+      .values({
+        chatId,
+        userId,
+        title,
+        description,
+        schema,
+        tone,
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
+
+    return newForm;
+  } catch (_error) {
+    throw new ChatSDKError("bad_request:database", "Failed to create form");
+  }
+}
+
+export async function getFormById({ id }: { id: string }) {
+  try {
+    const [existingForm] = await db.select().from(form).where(eq(form.id, id));
+
+    return existingForm;
+  } catch (_error) {
+    throw new ChatSDKError("bad_request:database", "Failed to get form by id");
+  }
+}
+
+export async function getFormByChatId({ chatId }: { chatId: string }) {
+  try {
+    const [existingForm] = await db
+      .select()
+      .from(form)
+      .where(eq(form.chatId, chatId));
+
+    return existingForm;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get form by chat id"
+    );
+  }
+}
+
+export async function getFormsByUserId({ userId }: { userId: string }) {
+  try {
+    return await db
+      .select()
+      .from(form)
+      .where(eq(form.userId, userId))
+      .orderBy(desc(form.createdAt));
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get forms by user id"
+    );
+  }
+}
+
+export async function updateForm({
+  id,
+  title,
+  description,
+  schema,
+  tone,
+  isActive,
+}: {
+  id: string;
+  title?: string;
+  description?: string;
+  schema?: unknown;
+  tone?: "friendly" | "professional" | "playful" | "formal";
+  isActive?: boolean;
+}) {
+  try {
+    const updateData: Record<string, unknown> = {
+      updatedAt: new Date(),
+    };
+
+    if (title !== undefined) updateData.title = title;
+    if (description !== undefined) updateData.description = description;
+    if (schema !== undefined) updateData.schema = schema;
+    if (tone !== undefined) updateData.tone = tone;
+    if (isActive !== undefined) updateData.isActive = isActive;
+
+    const [updatedForm] = await db
+      .update(form)
+      .set(updateData)
+      .where(eq(form.id, id))
+      .returning();
+
+    return updatedForm;
+  } catch (_error) {
+    throw new ChatSDKError("bad_request:database", "Failed to update form");
+  }
+}
+
+export async function deleteForm({ id }: { id: string }) {
+  try {
+    const [deletedForm] = await db
+      .delete(form)
+      .where(eq(form.id, id))
+      .returning();
+
+    return deletedForm;
+  } catch (_error) {
+    throw new ChatSDKError("bad_request:database", "Failed to delete form");
   }
 }

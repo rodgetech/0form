@@ -23,9 +23,14 @@ import type { ChatModel } from "@/lib/ai/models";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { myProvider } from "@/lib/ai/providers";
 import { createDocument } from "@/lib/ai/tools/create-document";
+import { finalizeForm } from "@/lib/ai/tools/finalize-form";
+import { generateFormSchema } from "@/lib/ai/tools/generate-form-schema";
+import { getForm } from "@/lib/ai/tools/get-form";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
+import { toggleFormStatus } from "@/lib/ai/tools/toggle-form-status";
 import { updateDocument } from "@/lib/ai/tools/update-document";
+import { updateFormSchema } from "@/lib/ai/tools/update-form-schema";
 import { isProductionEnvironment } from "@/lib/constants";
 import {
   createStreamId,
@@ -188,6 +193,11 @@ export async function POST(request: Request) {
                   "createDocument",
                   "updateDocument",
                   "requestSuggestions",
+                  "generateFormSchema",
+                  "updateFormSchema",
+                  "getForm",
+                  "toggleFormStatus",
+                  "finalizeForm",
                 ],
           experimental_transform: smoothStream({ chunking: "word" }),
           tools: {
@@ -198,6 +208,18 @@ export async function POST(request: Request) {
               session,
               dataStream,
             }),
+            generateFormSchema: generateFormSchema({
+              session,
+              dataStream,
+            }),
+            updateFormSchema: updateFormSchema({
+              session,
+              dataStream,
+              chatId: id,
+            }),
+            getForm: getForm({ session, chatId: id }),
+            toggleFormStatus: toggleFormStatus({ session, chatId: id }),
+            finalizeForm: finalizeForm({ session, chatId: id }),
           },
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,

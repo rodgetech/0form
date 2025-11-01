@@ -29,29 +29,29 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 
 ### 1.1 Database Schema Design
 
-- ⬜ **Task 1.1.1:** Design `Form` table schema
+- ✅ **Task 1.1.1:** Design `Form` table schema
 
   - Fields: id, chatId (references Chat.id), userId, title, description, schema (JSONB), tone, isActive, createdAt, updatedAt
   - Links each form to its creation conversation (Chat)
   - Add to `lib/db/schema.ts`
 
-- ⬜ **Task 1.1.2:** Design `FormSubmission` table schema
+- ✅ **Task 1.1.2:** Design `FormSubmission` table schema
 
   - Fields: id, formId, submittedAt, responses (JSONB), metadata (JSONB)
   - No userId needed (submissions can be anonymous)
   - responses JSONB stores field-value pairs matching form schema
 
-- ⬜ **Task 1.1.3:** Design `FormFile` table schema
+- ✅ **Task 1.1.3:** Design `FormFile` table schema
 
   - Fields: id, submissionId, formId, fieldName, blobUrl, fileName, fileSize, mimeType, uploadedAt
   - Links to Vercel Blob storage URLs for uploaded files
 
-- ⬜ **Task 1.1.4:** Generate Drizzle migrations
+- ✅ **Task 1.1.4:** Generate Drizzle migrations
 
   - Run `pnpm db:generate`
   - Review generated SQL files
 
-- ⬜ **Task 1.1.5:** Run migrations locally
+- ✅ **Task 1.1.5:** Run migrations locally
   - Run `pnpm db:migrate`
   - Verify tables created in Drizzle Studio (`pnpm db:studio`)
 
@@ -61,7 +61,7 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 
 ### 2.1 System Prompts & AI Configuration
 
-- ⬜ **Task 2.1.1:** Create system prompt for form creation
+- ✅ **Task 2.1.1:** Create system prompt for form creation
 
   - Add to `lib/ai/prompts.ts`
   - Guide AI to ask: "What form would you like to create?"
@@ -69,7 +69,7 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
   - Guide AI to suggest improvements (e.g., "Would you like me to add an NPS question?")
   - Include examples from PRD (customer feedback, job application)
 
-- ⬜ **Task 2.1.2:** Create AI tool for schema generation
+- ✅ **Task 2.1.2:** Create AI tool for schema generation
 
   - New file: `lib/ai/tools/generate-form-schema.ts`
   - Input: User's natural language description
@@ -96,14 +96,16 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
     ```
   - Register tool in chat route
 
-- ⬜ **Task 2.1.3:** Add iterative refinement flow
-  - AI asks clarifying questions if description is vague
-  - User can review, approve, or modify generated schema
-  - Support multiple iterations before finalizing
+- ✅ **Task 2.1.3:** Add iterative refinement flow
+  - Separated schema generation from form creation (two tools: `generateFormSchema` + `finalizeForm`)
+  - `generateFormSchema` creates draft/preview (not saved to DB)
+  - Users can iterate freely with AI making adjustments
+  - `finalizeForm` only called when user explicitly approves
+  - Updated `formCreationPrompt` with clear workflow instructions
 
 ### 2.2 Form Persistence
 
-- ⬜ **Task 2.2.1:** Create database queries for forms
+- ✅ **Task 2.2.1:** Create database queries for forms
 
   - Add to `lib/db/queries.ts`
   - `createForm({ chatId, userId, schema, title, tone })`
@@ -113,55 +115,107 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
   - `updateForm({ id, schema, isActive })`
   - `deleteForm({ id })` - cascade delete submissions
 
-- ⬜ **Task 2.2.2:** Create API route for form operations
+- ✅ **Task 2.2.2:** Create API route for form operations
 
-  - `app/api/forms/route.ts`
-  - POST: Create/save new form (called when user finalizes schema)
-  - GET: List user's forms
-  - PUT: Update form schema/settings
-  - DELETE: Delete form
+  - `app/api/forms/route.ts` - GET (list forms), POST (create form)
+  - `app/api/forms/[id]/route.ts` - GET (single form), PATCH (update), DELETE
+  - `app/api/forms/schema.ts` - Zod validation schemas
+  - Follows existing API patterns: auth checks, ChatSDKError, validation
 
-- ⬜ **Task 2.2.3:** Link form to chat conversation
-  - When form is finalized, create Form record with current `chatId`
-  - Update Chat title to form name (e.g., "Customer Feedback Form")
-  - Store Form.id reference for easy lookup
+- ✅ **Task 2.2.3:** Link form to chat conversation
+  - When form schema is generated, automatically create Form record with `chatId`
+  - Form title/description/tone extracted from generated schema
+  - Modified `generateFormSchema` tool to call `createForm()` after generation
+  - Chat title remains unchanged (no sync needed)
 
 ### 2.3 In-Chat Form Status Display
 
-- ⬜ **Task 2.3.1:** Create form status card component
+- ✅ **Task 2.3.0:** Create form preview component for in-chat visualization
+
+  - New files: `components/flowform/form-preview.tsx` and `components/flowform/form-field-preview.tsx`
+  - Shows beautiful read-only form UI (like weather widget) when AI generates schema
+  - Displays all form fields with appropriate input components
+  - Source of truth: FormSchema from AI tool (no modifications)
+  - Follows AI SDK generative UI pattern (handler in message.tsx)
+  - Fixed prompt to prevent AI from outputting JSON in text response
+
+- ✅ **Task 2.3.1:** Create form status card component
 
   - New file: `components/flowform/form-status-card.tsx`
-  - Shows when form is published (appears inline in chat)
-  - Displays:
-    - ✅ Form published
-    - 📋 Form title
-    - 🔗 Shareable link with copy-to-clipboard
-    - 📊 "View X Submissions" button (links to submissions page)
-    - ⚙️ Settings/edit link
+  - Shows when form is published via `tool-finalizeForm` handler
+  - Compact action bar displaying:
+    - ✅ Form published confirmation with CheckCircleFillIcon
+    - 🔗 Shareable link in read-only input field
+    - 📋 Copy-to-clipboard button with toast notification
+  - Follows AI SDK generative UI pattern (handler in message.tsx)
+  - Uses existing shadcn/ui components and patterns
+  - Removed message property from finalizeForm tool for clean output
 
-- ⬜ **Task 2.3.2:** Integrate status card into chat UI
+- ✅ **Task 2.3.2:** Integrate status card into chat UI
 
-  - Detect when chat has associated published form
-  - Render form status card at top or bottom of chat
-  - Update in real-time when submissions come in
+  - Integrated via `tool-finalizeForm` handler in message.tsx
+  - FormStatusCard renders inline when form is finalized
+  - Completed as part of Task 2.3.1 implementation
 
-- ⬜ **Task 2.3.3:** Generate shareable form URL
-  - Format: `/form/[formId]` or `/f/[formId]`
-  - Copy-to-clipboard functionality with toast notification
-  - Show full URL (e.g., `https://flowform.ai/form/abc-123`)
+- ✅ **Task 2.3.3:** Generate shareable form URL
+  - URL format: `${window.location.origin}/form/${formId}` (works for localhost and production)
+  - Copy-to-clipboard with toast notification implemented in FormStatusCard
+  - Completed as part of Task 2.3.1 implementation
+
+- ✅ **Task 2.3.4:** Add form update/edit functionality in chat
+
+  - Created `updateFormSchema` AI tool in `lib/ai/tools/update-form-schema.ts`
+  - Fetches existing form via `getFormByChatId()`, provides as context to AI
+  - User can say: "change the tone to professional", "add a phone number field", "make email optional"
+  - Generates complete updated schema with requested changes applied
+  - Shows updated FormPreview component (reused from generateFormSchema)
+  - Enhanced `finalizeForm` to auto-detect and update existing forms
+  - Registered tool in chat route and added rendering in message.tsx
+  - Updated prompts.ts with editing guidance and types.ts with tool definition
+  - Follows same preview-approve pattern as form creation
+
+- ✅ **Task 2.3.5:** Add unpublish/republish functionality
+
+  - Created `toggleFormStatus` AI tool in `lib/ai/tools/toggle-form-status.ts`
+  - Smart toggle: automatically detects current status and switches to opposite
+  - Uses existing `updateForm({ id, isActive })` query from Task 2.2.1
+  - User can say: "pause this form", "unpublish", "make it live again", "republish"
+  - Returns `{ formId, previousStatus, newStatus }` for UI display
+  - Registered tool in chat route and added rendering in message.tsx
+  - Updated prompts.ts with pause/unpublish guidance
+  - Updated types.ts with toggleFormStatusTool definition
+  - Shows status change in collapsed Tool component with styled message
+
+- ⬜ **Task 2.3.6:** Update FormStatusCard to support post-publish actions
+
+  - Enhance `components/flowform/form-status-card.tsx`
+  - Show current form status: "Published" (green) or "Paused" (yellow/gray)
+  - Add action prompts matching screenshot:
+    - "Would you like to:"
+    - "• Unpublish this form"
+    - "• Make changes to this form"
+    - "• Or are we all set for today?"
+  - Can be interactive buttons or AI conversation prompts
+  - Update to show "Form Paused" state when isActive = false
 
 ### 2.4 Chat Sidebar Updates (Form History)
 
-- ⬜ **Task 2.4.1:** Update sidebar to show form status
+- ✅ **Task 2.4.1:** Update sidebar to show form status
 
-  - Modify `components/sidebar-history.tsx`
-  - Add visual indicator for chats with published forms (e.g., 📋 icon or badge)
-  - Show submission count if available (e.g., "Customer Feedback (12)")
-  - Keep existing chat title/timestamp display
+  - Modified `lib/db/queries.ts` - Updated `getChatsByUserId()` with LEFT JOIN to form table
+  - Created `ChatWithForm` type in `lib/db/schema.ts` with `hasForm` boolean field
+  - Updated `components/sidebar-history-item.tsx` to show green checkmark icon (CheckCircleFillIcon)
+  - Visual indicator: Green checkmark (14px) appears before chat title when form exists
+  - No submission count in this phase (keeping it simple for now)
 
-- ⬜ **Task 2.4.2:** Add welcome message for first-time users
-  - When user starts first chat, AI says: "Welcome! I'll help you create conversational forms. What would you like to collect from your users?"
-  - Show example: "For example: 'I need customer feedback with name, email, and satisfaction rating'"
+- ✅ **Task 2.4.2:** Add welcome message for first-time users
+  - Updated starter templates in `components/suggested-actions.tsx` to form-related examples
+  - New templates guide users toward common form types:
+    - "Customer feedback form with rating and comments"
+    - "Event registration form"
+    - "Contact form with name, email, and message"
+    - "Job application form with resume upload"
+  - AI prompts already have Flowform-specific greeting logic in place
 
 ---
 
@@ -749,12 +803,12 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 ## Progress Summary
 
 **Total Core Tasks:** 67 (down from 78 due to simplification)
-**Completed:** 0
+**Completed:** 11
 **In Progress:** 0
-**Not Started:** 67
+**Not Started:** 56
 
-**Current Phase:** Phase 1 - Database Schema & Core Models
-**Next Milestone:** Complete database schema design and run first migrations
+**Current Phase:** Phase 2 - Form Creation Flow (Creator Side) 🔄 IN PROGRESS
+**Next Milestone:** Form Persistence & Database Queries
 
 **Estimated Timeline:**
 
