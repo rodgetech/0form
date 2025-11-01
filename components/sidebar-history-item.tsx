@@ -52,7 +52,6 @@ const PureChatItem = ({
         >
           {chat.hasForm && (
             <CheckCircleFillIcon
-              className="shrink-0 text-green-600"
               size={14}
             />
           )}
