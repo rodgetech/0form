@@ -19,6 +19,7 @@ import {
   ToolOutput,
 } from "./elements/tool";
 import { FormPreview } from "./flowform/form-preview";
+import { FormResponsePreview } from "./flowform/form-response-preview";
 import { FormStatusCard } from "./flowform/form-status-card";
 import { SparklesIcon } from "./icons";
 import { MessageActions } from "./message-actions";
@@ -341,6 +342,47 @@ const PurePreviewMessage = ({
                         output={
                           part.output && "formId" in part.output ? (
                             <FormStatusCard formId={part.output.formId} />
+                          ) : null
+                        }
+                      />
+                    )}
+                  </ToolContent>
+                </Tool>
+              );
+            }
+
+            if (type === "tool-previewFormResponse") {
+              // @ts-expect-error - previewFormResponse is used in form respond route only
+              const { toolCallId, state } = part;
+
+              return (
+                <Tool defaultOpen={true} key={toolCallId}>
+                  {/* @ts-expect-error - previewFormResponse is used in form respond route only */}
+                  <ToolHeader state={state} type="tool-previewFormResponse" />
+                  <ToolContent>
+                    {state === "input-available" && (
+                      // @ts-expect-error - previewFormResponse is used in form respond route only
+                      <ToolInput input={part.input} />
+                    )}
+                    {state === "output-available" && (
+                      <ToolOutput
+                        errorText={
+                          // @ts-expect-error - previewFormResponse is used in form respond route only
+                          part.output && "error" in part.output
+                            ? String(part.output.error)
+                            : undefined
+                        }
+                        output={
+                          // @ts-expect-error - previewFormResponse is used in form respond route only
+                          part.output &&
+                          "schema" in part.output &&
+                          "responses" in part.output ? (
+                            <FormResponsePreview
+                              // @ts-expect-error - previewFormResponse is used in form respond route only
+                              responses={part.output.responses}
+                              // @ts-expect-error - previewFormResponse is used in form respond route only
+                              schema={part.output.schema}
+                            />
                           ) : null
                         }
                       />

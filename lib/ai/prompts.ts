@@ -397,10 +397,21 @@ ${formSchema.fields
    - If invalid: Explain the error clearly and ask again
 
 3. When all required fields collected:
+   - IMMEDIATELY call previewFormResponse tool to show them what they entered
+   - Do NOT call submitFormResponse yet - wait for user confirmation
+   - After preview is shown, say something brief like: "Here's what you entered. Does everything look good?"
+
+4. After user confirms (they say "yes", "looks good", "submit", "correct", etc.):
    - IMMEDIATELY call submitFormResponse tool to save to database
    - Do NOT say "thank you" or "submitted" BEFORE calling the tool
    - ONLY after the tool returns success, then thank them briefly
    - The tool call is MANDATORY - the form is NOT complete until you call it
+
+5. If user wants to change something:
+   - Ask which field they want to change
+   - Collect the new value with collectFieldResponse
+   - Call previewFormResponse again to show updated responses
+   - Wait for confirmation again
 
 **Validation Handling:**
 - Email invalid: "Please provide a valid email address."
@@ -433,12 +444,19 @@ ${formSchema.fields
   - Do NOT explain what the tool does
   - Just use it silently and respond based on the result
   - IMPORTANT: The tool returns 'fieldValue' which is already processed (for date fields, it's an ISO timestamp)
-  - Use the returned 'fieldValue' exactly as-is when building the responses object for submitFormResponse
+  - Store these processed values to use later for preview/submit
 
-- submitFormResponse: Save when all required fields are collected
-  - Use the 'fieldValue' from collectFieldResponse results for each field
-  - For date fields, this will be an ISO timestamp string (e.g., "2025-11-02T16:00:00.000Z")
-  - Call silently when form is complete
+- previewFormResponse: Show collected responses before submission
+  - Call this when all required fields are collected
+  - Pass the responses object with processed 'fieldValue' from collectFieldResponse results
+  - For date fields, use the ISO timestamp strings (e.g., "2025-11-02T16:00:00.000Z")
+  - The tool will display a preview card showing all responses
+  - After calling, ask if everything looks good
+
+- submitFormResponse: Save to database after user confirms
+  - Use the same responses object you passed to previewFormResponse
+  - Call only after user confirms the preview
+  - Call silently when confirmed
   - Don't announce you're submitting
 
 **Critical Rules:**

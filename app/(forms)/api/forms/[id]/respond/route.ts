@@ -9,6 +9,7 @@ import {
 import { formFillingPrompt } from "@/lib/ai/prompts";
 import { myProvider } from "@/lib/ai/providers";
 import { collectFieldResponse } from "@/lib/ai/tools/collect-field-response";
+import { previewFormResponse } from "@/lib/ai/tools/preview-form-response";
 import { submitFormResponse } from "@/lib/ai/tools/submit-form-response";
 import { getFormById } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
@@ -76,11 +77,13 @@ export async function POST(
           stopWhen: stepCountIs(10),
           experimental_activeTools: [
             "collectFieldResponse",
+            "previewFormResponse",
             "submitFormResponse",
           ],
           experimental_transform: smoothStream({ chunking: "word" }),
           tools: {
             collectFieldResponse: collectFieldResponse({ form }),
+            previewFormResponse: previewFormResponse({ form }),
             submitFormResponse: submitFormResponse({ form }),
           },
         });
