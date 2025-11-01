@@ -3,9 +3,12 @@
  * Used by collect-field-response and submit-form-response tools
  */
 
+import * as chrono from "chrono-node";
+
 export type ValidationResult = {
   valid: boolean;
   error?: string;
+  parsedValue?: string; // For date fields, returns ISO string
 };
 
 export type FormField = {
@@ -93,11 +96,78 @@ export function validateNumber(
 }
 
 /**
- * Validate date format
+ * Detect if user input includes a time component
+ * Checks for time-related keywords and patterns
  */
-export function validateDate(value: string): boolean {
-  const date = new Date(value);
-  return !Number.isNaN(date.getTime());
+function hasTimeComponent(value: string): boolean {
+  const lowerValue = value.toLowerCase().trim();
+
+  // Time patterns: "at 3pm", "2:30", "noon", "midnight", "morning", "evening"
+  const timePatterns = [
+    /\d{1,2}:\d{2}/, // 3:30, 14:00
+    /\d{1,2}\s*(am|pm)/i, // 3pm, 4 PM
+    /\bat\s+\d/i, // "at 3", "at 14"
+    /(noon|midnight|morning|afternoon|evening|night)/i,
+  ];
+
+  return timePatterns.some((pattern) => pattern.test(lowerValue));
+}
+
+/**
+ * Detect if a field label suggests time is required
+ */
+function labelRequiresTime(label: string): boolean {
+  const lowerLabel = label.toLowerCase();
+
+  return (
+    lowerLabel.includes("time") ||
+    lowerLabel.includes("when") ||
+    lowerLabel.includes("schedule") ||
+    lowerLabel.includes("appointment") ||
+    lowerLabel.includes("booking")
+  );
+}
+
+/**
+ * Validate date format using natural language parsing
+ * Supports formats like "tomorrow at 3pm", "January 1st, 2026", "next Tuesday"
+ */
+export function validateDate(
+  value: string,
+  fieldLabel?: string
+): ValidationResult {
+  if (!value || value.trim() === "") {
+    return { valid: false, error: "Please provide a date" };
+  }
+
+  // Parse natural language date using chrono-node
+  const parsed = chrono.parseDate(value);
+
+  if (!parsed) {
+    return {
+      valid: false,
+      error:
+        "I couldn't understand that date. Could you try a format like 'January 15, 2026', 'tomorrow at 3pm', or 'next Tuesday'?",
+    };
+  }
+
+  // Check if time component is required but missing
+  const userProvidedTime = hasTimeComponent(value);
+  const timeIsRequired = fieldLabel && labelRequiresTime(fieldLabel);
+
+  if (timeIsRequired && !userProvidedTime) {
+    return {
+      valid: false,
+      error:
+        "Please include a specific time (e.g., 'tomorrow at 3pm' or 'January 15 at 2:30pm')",
+    };
+  }
+
+  // Return the parsed date as ISO string for storage
+  return {
+    valid: true,
+    parsedValue: parsed.toISOString(),
+  };
 }
 
 /**
@@ -159,7 +229,8 @@ export function validateScale(
  */
 export function validateFieldType(
   field: FormField,
-  value: string
+  value: string,
+  fieldLabel?: string
 ): ValidationResult {
   // Check required fields
   if (field.required && !validateRequired(value)) {
@@ -203,13 +274,7 @@ export function validateFieldType(
     }
 
     case "date": {
-      if (!validateDate(value)) {
-        return {
-          valid: false,
-          error: "Please provide a valid date",
-        };
-      }
-      return { valid: true };
+      return validateDate(value, fieldLabel ?? field.label);
     }
 
     case "choice": {

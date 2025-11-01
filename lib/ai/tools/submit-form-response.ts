@@ -51,7 +51,7 @@ export const submitFormResponse = ({ form }: SubmitFormResponseProps) =>
         }
 
         if (value) {
-          const validationResult = validateFieldType(field, value);
+          const validationResult = validateFieldType(field, value, field.label);
 
           if (!validationResult.valid) {
             validationErrors.push(`${field.label}: ${validationResult.error}`);

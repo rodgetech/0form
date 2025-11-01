@@ -302,45 +302,42 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
   - **API Integration:** Wired up in `app/f/api/forms/[id]/respond/route.ts`
   - **Progress Indicator:** Deferred to Phase 5 (keeping it conversational)
 
+- ✅ **Task 3.2.5:** Enhanced Date/Time Parsing with Natural Language Support
+
+  - **Decision:** Pure conversational approach for MVP differentiation
+  - **Library:** Installed `chrono-node` for natural language date parsing
+  - **Capabilities:** Supports flexible date input formats:
+    - Relative: "tomorrow at 3pm", "next Tuesday", "in 3 days"
+    - Absolute: "January 1st, 2026", "Jan 1, 2026 at 2pm"
+    - Casual: "next week", "this Friday"
+  - **Implementation:**
+    - Enhanced `validateDate()` in `lib/ai/tools/validation.ts`
+    - Returns parsed ISO string when valid
+    - Provides helpful error messages for unparseable dates
+  - **Prompt Updates:**
+    - Added date field handling instructions to `formFillingPrompt`
+    - AI confirms parsed dates back to user in clear format
+    - AI handles ambiguous dates with clarifying questions
+  - **File Uploads:** Already handled by existing MultimodalInput attachment system (paperclip icon)
+
 ### 3.3 Smart UI Component Switching
 
-- ⬜ **Task 3.3.1:** Create UI component selector logic
+- ⏸️ **Task 3.3:** Smart UI Component Switching - **DEFERRED**
 
-  - File: `lib/flowform/ui-selector.ts`
-  - Based on field type from schema, determine which component to render:
-    - `text` → Standard text input
-    - `email` → Email input with validation icon
-    - `number` → Number input with +/- controls
-    - `date` → Date picker component
-    - `file` → File upload component
-    - `choice` → Button chips (for 2-5 options) or dropdown (6+ options)
-    - `scale` (1-5, 1-10) → Horizontal button chips with labels
-    - `longtext` → Textarea
-  - Return component type + props
-
-- ⬜ **Task 3.3.2:** Create reusable form UI components
-
-  - `components/flowform/date-picker-input.tsx`
-    - Calendar dropdown
-    - Manual text entry fallback
-  - `components/flowform/file-upload-input.tsx`
-    - Drag-and-drop zone
-    - File type restrictions
-    - Progress indicator
-  - `components/flowform/button-chips.tsx`
-    - Horizontal button group
-    - Single/multi-select support
-    - Active state styling
-  - `components/flowform/scale-selector.tsx`
-    - Numeric scale with labels (e.g., "Not satisfied" to "Very satisfied")
-    - Visual feedback on hover/selection
-
-- ⬜ **Task 3.3.3:** Integrate UI components with chat stream
-  - Modify chat message renderer
-  - AI signals field type in response (via tool call or special syntax)
-  - Render appropriate input component inline in chat
-  - Capture user input and send back to AI
-  - AI confirms: "Got it! Rating: 5/5 ⭐"
+  - **Decision:** Staying pure conversational for MVP to maintain differentiation
+  - **Rationale:**
+    - Pure conversational experience is our unique selling point
+    - Date/time fields: Handled via natural language parsing (chrono-node)
+    - File uploads: Already handled by MultimodalInput attachment system
+    - Choice fields: Work naturally through conversation ("Which option: A, B, or C?")
+    - All other fields: Natural conversation is faster and more accessible
+  - **Benefits of Pure Conversational:**
+    - Voice-friendly (no clicking required)
+    - Mobile-optimized (no tiny UI components)
+    - Natural and human (feels like texting)
+    - Lower cognitive load
+    - AI advantage over traditional form builders
+  - **May Revisit:** Based on user feedback after MVP launch, but core value prop is conversational
 
 ### 3.4 File Upload Handling
 
@@ -826,13 +823,14 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 
 ## Progress Summary
 
-**Total Core Tasks:** 67 (down from 78 due to simplification)
-**Completed:** 29 (includes Phase 3.2 conversational response engine with bug fixes)
+**Total Core Tasks:** 68 (includes enhanced date parsing, deferred UI components)
+**Completed:** 30 (includes Phase 3.2 + natural language date parsing)
 **In Progress:** 0
-**Not Started:** 38
+**Deferred:** 1 (Task 3.3 - Smart UI Component Switching - pure conversational approach)
+**Not Started:** 37
 
 **Current Phase:** Phase 3 - Form Response Flow (Respondent Side) 🔄 IN PROGRESS
-**Next Milestone:** Smart UI Component Switching (Tasks 3.3.1 - 3.3.3) - Optional Enhancement
+**Next Milestone:** File Upload Handling (Task 3.4) or Phase 4 Analytics & Management
 
 **Estimated Timeline:**
 

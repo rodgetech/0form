@@ -35,7 +35,7 @@ export const collectFieldResponse = ({ form }: CollectFieldResponseProps) =>
       }
 
       // Validate the field value
-      const validationResult = validateFieldType(field, fieldValue);
+      const validationResult = validateFieldType(field, fieldValue, field.label);
 
       if (!validationResult.valid) {
         return {
@@ -50,7 +50,8 @@ export const collectFieldResponse = ({ form }: CollectFieldResponseProps) =>
         valid: true,
         fieldName: field.name,
         fieldLabel: field.label,
-        fieldValue,
+        fieldValue: validationResult.parsedValue ?? fieldValue, // Use parsed value if available (e.g., ISO string for dates)
+        parsedValue: validationResult.parsedValue, // Include for AI context
       };
     },
   });

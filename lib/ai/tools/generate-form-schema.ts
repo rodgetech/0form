@@ -142,7 +142,7 @@ export const generateFormSchema = ({
   * "email" → email type with validation
   * "rating", "satisfaction", "NPS" → scale type
   * "resume", "CV", "document" → file type
-  * "date", "birthday", "when" → date type
+  * "date", "birthday", "when", "schedule", "appointment", "booking" → date type
   * "comments", "feedback", "description" → longtext type
   * "website", "portfolio" → url type
   * "choose", "select", "which" → choice type
@@ -156,6 +156,12 @@ export const generateFormSchema = ({
 **Labels:**
 - Write labels as conversational questions (e.g., "What's your email?" not just "Email")
 - Be friendly and clear
+- For date/time fields, use natural questions that match the context:
+  * Scheduling/appointments: "When would you like to schedule your [service]?" or "What date and time work best for you?"
+  * Deadlines: "When do you need this completed by?"
+  * Availability: "When are you available?"
+  * Birthdays: "What's your date of birth?" or "When's your birthday?"
+- AVOID technical phrasing like "Please select date and time" - use conversational language instead
 
 **Validation:**
 - Always add email pattern validation for email fields
