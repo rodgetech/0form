@@ -28,7 +28,7 @@ export function FormStatusCard({ formId }: FormStatusCardProps) {
     <Card className="w-full">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
-          <CheckCircleFillIcon className="text-green-600" size={20} />
+          <CheckCircleFillIcon  />
           <CardTitle className="font-semibold text-lg">
             Form Published Successfully!
           </CardTitle>
@@ -46,7 +46,7 @@ export function FormStatusCard({ formId }: FormStatusCardProps) {
             value={formUrl}
           />
           <Button onClick={handleCopy} size="sm" variant="outline">
-            <CopyIcon className="mr-2" />
+            <CopyIcon  />
             {copied ? "Copied!" : "Copy"}
           </Button>
         </div>
