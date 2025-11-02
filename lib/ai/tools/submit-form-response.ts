@@ -112,7 +112,10 @@ export const submitFormResponse = ({ form }: SubmitFormResponseProps) =>
 
       // Transform file field responses to include metadata
       // Instead of storing just URL string, store {url, filename, mimeType} object
-      const transformedResponses = { ...responses };
+      const transformedResponses: Record<
+        string,
+        string | { url: string; filename: string; mimeType: string }
+      > = { ...responses };
       for (const field of schema.fields) {
         if (field.type === "file" && responses[field.name]) {
           const fileMeta = fileMetadata?.[field.name];
