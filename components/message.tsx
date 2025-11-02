@@ -351,6 +351,7 @@ const PurePreviewMessage = ({
               );
             }
 
+            // @ts-expect-error - previewFormResponse is used in form respond route only
             if (type === "tool-previewFormResponse") {
               // @ts-expect-error - previewFormResponse is used in form respond route only
               const { toolCallId, state } = part;
