@@ -224,11 +224,13 @@ function renderFieldInput(field: FormField, value?: unknown) {
           "url" in value &&
           ("name" in value || "filename" in value);
 
-        const displayName = isFileObject
-          ? value.filename || value.name
-          : typeof value === "string"
-            ? value
-            : "File uploaded";
+        let displayName = "File uploaded";
+        if (isFileObject) {
+          const fileObj = value as { filename?: string; name?: string };
+          displayName = fileObj.filename || fileObj.name || "File uploaded";
+        } else if (typeof value === "string") {
+          displayName = value;
+        }
 
         return (
           <div className="rounded-md border bg-muted/50 px-3 py-2">
