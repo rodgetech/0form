@@ -341,74 +341,101 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 
 ### 3.4 File Upload Handling
 
-- ⬜ **Task 3.4.1:** Create file upload API route
+- ✅ **Task 3.4.1:** Create file upload API route
 
-  - `app/api/flowform/upload/route.ts`
-  - Accept multipart form data
-  - Upload to Vercel Blob storage
-  - Return blob URL and metadata
-  - Store metadata temporarily (link to submission later)
+  - Created `app/(forms)/api/flowform/upload/route.ts`
+  - Accepts multipart form data (file, formId, optional fieldName)
+  - Uploads to Vercel Blob storage with public access
+  - Returns blob URL, filename, size, and MIME type
+  - Generic validation (form existence, file size) - field-specific validation in tools
 
-- ⬜ **Task 3.4.2:** Add file validation
+- ✅ **Task 3.4.2:** Add file validation
 
-  - Server-side file type validation (whitelist: .pdf, .docx, .jpg, .png, etc.)
-  - File size limits (default 10MB, configurable per form)
-  - MIME type verification
-  - Error handling with user-friendly messages
+  - Created `validateFile()` function in `lib/ai/tools/validation.ts`
+  - Server-side file type validation with MIME type mapping
+  - Supports common formats: .pdf, .doc, .docx, .xls, .xlsx, .jpg, .jpeg, .png, .gif, .txt, .csv
+  - File size limit: 10MB (enforced in upload endpoint)
+  - Validation happens in `collectFieldResponse` tool (AI knows field context)
+  - User-friendly error messages returned to AI for communication
 
-- ⬜ **Task 3.4.3:** Create file upload UI component
+- ✅ **Task 3.4.3:** Reuse existing file upload UI component
 
-  - Drag-and-drop zone with visual feedback
-  - Click to browse alternative
-  - Upload progress bar
-  - Image preview (thumbnail for images)
-  - File name + size display for documents
-  - Remove/replace file option
+  - **Decision:** Reused existing `MultimodalInput` component with paperclip icon
+  - Already has drag-and-drop support
+  - Shows upload progress and previews
+  - Routes to public upload endpoint (`/api/flowform/upload`) for public forms
+  - Routes to authenticated endpoint (`/api/files/upload`) for creator chats
+  - Image previews configured with Next.js Image component (added Vercel Blob hostname to config)
 
-- ⬜ **Task 3.4.4:** Link uploaded files to submissions
-  - Store blob URL temporarily during conversation
-  - When submission finalized, create FormFile records
-  - Associate files with correct form field and submission
+- ✅ **Task 3.4.4:** Link uploaded files to submissions
+  - File metadata extracted from message parts and filtered before sending to AI model
+  - AI stores file metadata object `{url, filename, mimeType}` in responses (not just URL)
+  - `submitFormResponse` tool creates FormFile records in database
+  - Associates files with correct form field and submission ID
+  - FormFieldPreview component displays original filename (not full URL)
+
+- ✅ **Task 3.4.5:** Additional Implementation Details
+  - **Bug Fix:** Grok model doesn't support PDF/file parts in messages
+    - Solution: Filter file parts from messages before sending to model
+    - File metadata added to system prompt for AI to access
+    - Implemented in `app/(forms)/api/forms/[id]/respond/route.ts`
+  - **Database Integration:**
+    - Added `createFormFile()` query to `lib/db/queries.ts`
+    - Stores all file metadata for retrieval and download
+  - **AI Prompt Updates:**
+    - Updated `formFillingPrompt` with file handling instructions
+    - AI extracts file info from "File Uploads Context" in system prompt
+    - Passes metadata to `collectFieldResponse` for validation
+  - **Preview Display:**
+    - Shows original filename with paperclip icon: `📎 Resume.pdf`
+    - Supports both validation format `{url, name, mimeType}` and storage format `{url, filename, mimeType}`
 
 ### 3.5 Response Submission & Storage
 
-- ⬜ **Task 3.5.1:** Create structured response mapper
+- ✅ **Task 3.5.1:** Create structured response mapper
 
-  - File: `lib/flowform/response-mapper.ts`
-  - Takes conversation history + form schema
-  - Extracts field values from AI-mapped responses
-  - Validates all required fields collected
-  - Formats as clean JSON:
+  - **Decision:** Response mapping handled by AI tools (no separate mapper file needed)
+  - `collectFieldResponse` tool validates and stores each field response
+  - AI maintains responses object throughout conversation
+  - `submitFormResponse` tool receives complete responses object
+  - Format stored in database:
     ```json
     {
       "email": "user@example.com",
       "rating": 5,
       "feedback": "Great product!",
-      "resume": "https://blob.vercel-storage.com/abc-123.pdf"
+      "resume": {
+        "url": "https://blob.vercel-storage.com/abc-123.pdf",
+        "filename": "Resume.pdf",
+        "mimeType": "application/pdf"
+      }
     }
     ```
 
-- ⬜ **Task 3.5.2:** Create submission API route
+- ✅ **Task 3.5.2:** Create submission API route
 
-  - `app/api/flowform/submit/route.ts`
-  - POST: Save form submission
-  - Validate form is active
-  - Store in `FormSubmission` table with responses JSONB
-  - Link uploaded files in `FormFile` table
-  - Return submission confirmation
+  - **Decision:** Submission handled by AI tool (not separate API route)
+  - `submitFormResponse` tool in `lib/ai/tools/submit-form-response.ts`
+  - Validates form is active
+  - Final validation of all required fields
+  - Stores in `FormSubmission` table with responses JSONB
+  - Links uploaded files in `FormFile` table
+  - Returns success confirmation with submission ID
 
-- ⬜ **Task 3.5.3:** Add submission confirmation
+- ✅ **Task 3.5.3:** Add submission confirmation
 
-  - AI displays thank you message (customizable per form tone)
-  - Show summary of submitted data (optional)
-  - Friendly closing: "Thanks for your feedback! We'll be in touch soon."
-  - Optional: Redirect or show "Form submitted" page
+  - AI displays thank you message based on form tone
+  - Confirmation message returned from `submitFormResponse` tool
+  - Success message: "Your response has been submitted successfully!"
+  - AI adapts closing based on tone setting
+  - No redirect - keeps user in conversational interface
 
-- ⬜ **Task 3.5.4:** Handle submission errors gracefully
-  - Network errors → Retry option
-  - Validation errors → Ask user to correct specific fields
-  - Form closed → Show message
-  - Already submitted? → Optional duplicate prevention
+- ✅ **Task 3.5.4:** Handle submission errors gracefully
+  - Validation errors handled by `collectFieldResponse` tool
+  - AI re-prompts user for invalid/missing fields
+  - Network errors show ChatSDKError messages
+  - Form closed/inactive detected in both tools
+  - Duplicate prevention: Not implemented (allowing multiple submissions per user)
 
 ---
 
@@ -824,13 +851,13 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 ## Progress Summary
 
 **Total Core Tasks:** 68 (includes enhanced date parsing, deferred UI components)
-**Completed:** 30 (includes Phase 3.2 + natural language date parsing)
+**Completed:** 39 (includes Phase 3.4 File Upload + Phase 3.5 Response Submission)
 **In Progress:** 0
 **Deferred:** 1 (Task 3.3 - Smart UI Component Switching - pure conversational approach)
-**Not Started:** 37
+**Not Started:** 28
 
-**Current Phase:** Phase 3 - Form Response Flow (Respondent Side) 🔄 IN PROGRESS
-**Next Milestone:** File Upload Handling (Task 3.4) or Phase 4 Analytics & Management
+**Current Phase:** Phase 3 - Form Response Flow (Respondent Side) ✅ COMPLETED
+**Next Milestone:** Phase 4 - Response Dashboard (Creator Side) - View and manage submissions
 
 **Estimated Timeline:**
 
@@ -845,5 +872,6 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 
 ---
 
-_Last Updated: October 31, 2025_
+_Last Updated: November 1, 2025_
 _Updated By: Claude + Luis_
+_Recent Completion: Phase 3 - Complete conversational form filling with file upload support_
