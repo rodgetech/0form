@@ -186,17 +186,13 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
   - Updated types.ts with toggleFormStatusTool definition
   - Shows status change in collapsed Tool component with styled message
 
-- ⬜ **Task 2.3.6:** Update FormStatusCard to support post-publish actions
+- ⏸️ **Task 2.3.6:** Update FormStatusCard to support post-publish actions - **DEFERRED**
 
-  - Enhance `components/flowform/form-status-card.tsx`
-  - Show current form status: "Published" (green) or "Paused" (yellow/gray)
-  - Add action prompts matching screenshot:
-    - "Would you like to:"
-    - "• Unpublish this form"
-    - "• Make changes to this form"
-    - "• Or are we all set for today?"
-  - Can be interactive buttons or AI conversation prompts
-  - Update to show "Form Paused" state when isActive = false
+  - **Decision:** Keeping FormStatusCard minimal for MVP (just link + copy button)
+  - **Rationale:** Conversational approach means users can naturally ask AI for next steps
+  - User can say: "unpublish this form", "make changes", "show me submissions"
+  - AI prompts guide users without needing buttons in status card
+  - May revisit post-MVP based on user feedback
 
 ### 2.4 Chat Sidebar Updates (Form History)
 
@@ -439,90 +435,115 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 
 ---
 
-## Phase 4: Response Dashboard (Creator Side)
+## Phase 4: Conversational Submissions Viewer (Creator Side)
 
-### 4.1 Submissions List View
+**New Approach:** AI-native conversational interface using Sheet artifact system instead of traditional dashboard pages. Users can ask "show me submissions" and get an interactive spreadsheet in split-view.
 
-- ⬜ **Task 4.1.1:** Create submissions dashboard route
+### 4.1 View Submissions Tool (Conversational)
 
-  - `app/(dashboard)/forms/[id]/submissions/page.tsx`
-  - Authenticated route (creator only)
-  - Verify user owns the form
+- ✅ **Task 4.1.1:** Create `viewFormSubmissions` AI tool
 
-- ⬜ **Task 4.1.2:** Create submissions table UI
+  - Created file: `lib/ai/tools/view-form-submissions.ts` ✅
+  - Fetches form by chatId using `getFormByChatId()` ✅
+  - Fetches submissions using `getSubmissionsByFormId()` (limit: 100) ✅
+  - Converts to CSV format (form fields → columns, submissions → rows) ✅
+  - Creates sheet document with submission data ✅
+  - Returns sheet artifact for split-view display ✅
 
-  - Table view with columns for each form field
-  - Show submission timestamp
-  - Show file indicators (icon if file uploaded)
-  - Pagination (20 per page default)
-  - Empty state: "No submissions yet. Share your form to start collecting responses!"
+- ✅ **Task 4.1.2:** Implement CSV conversion from submissions
 
-- ⬜ **Task 4.1.3:** Create database queries for submissions
+  - Helper function: `formSubmissionsToCSV(form, submissions)` ✅
+  - Header row: Form field labels as column names ✅
+  - Data rows: Submission responses mapped to columns in field order ✅
+  - Add "Submitted At" column with formatted timestamps ✅
+  - Handle file fields: Show as "📎 filename" ✅
+  - Handle date fields: Format ISO strings with `toLocaleString()` (UTC) ✅
+  - Handle missing/optional fields: Empty string "" for unfilled responses ✅
+  - Proper CSV escaping for commas, quotes, newlines ✅
 
-  - Add to `lib/db/queries.ts`
-  - `getSubmissionsByFormId({ formId, limit, offset })`
-  - `getSubmissionById({ id })`
-  - `getSubmissionCount({ formId })`
+- ✅ **Task 4.1.3:** Register tool in chat route
 
-- ⬜ **Task 4.1.4:** Add filtering and sorting
-  - Filter by date range (last 7 days, last 30 days, custom range)
-  - Sort by submission time (newest/oldest first)
-  - Search across text responses (optional)
-  - Export filtered results
+  - Added to `app/(chat)/api/chat/route.ts` ✅
+  - Added to `experimental_activeTools` array ✅
+  - Added to `tools` object with session, dataStream, chatId ✅
+  - Added type definition in `lib/types.ts` ✅
 
-### 4.2 Individual Submission View
+- ✅ **Task 4.1.4:** Update prompts for submissions guidance
+  - Added "Viewing Form Submissions" section to `lib/ai/prompts.ts` ✅
+  - Natural language triggers documented: "show me submissions", "view responses", "export data", etc. ✅
+  - Updated Example 4 to proactively offer submissions viewing after finalization ✅
+  - Guidance for handling "no submissions" case (encourage form sharing) ✅
+  - Positioned logically after form management tools ✅
 
-- ⬜ **Task 4.2.1:** Create submission detail page
+### 4.2 Enhanced Sheet Display for Form Responses
 
-  - `app/(dashboard)/forms/[id]/submissions/[submissionId]/page.tsx`
-  - Show all field responses in clean layout
-  - Display uploaded files with download links/previews
-  - Show submission timestamp and metadata (IP address, user agent if collected)
-  - "Back to all submissions" navigation
+- ⬜ **Task 4.2.1:** Add file field rendering in sheet cells
 
-- ⬜ **Task 4.2.2:** Add file download functionality
-  - Generate secure download URLs from Vercel Blob
-  - Support direct download
-  - Image preview in modal
-  - PDF preview (optional)
+  - Modify `components/sheet-editor.tsx` or create custom cell renderer
+  - Detect URLs in cells (file field data)
+  - Render as clickable download links with file icon
+  - Show original filename (not full blob URL)
+  - Example: "📎 Resume.pdf" instead of "https://blob.vercel-storage.com/..."
 
-### 4.3 Data Export
+- ⬜ **Task 4.2.2:** Improve date formatting in CSV export
 
-- ⬜ **Task 4.3.1:** Add CSV export
+  - Format ISO timestamps before CSV conversion
+  - User-friendly format: "Nov 2, 2025 4:00 PM" instead of "2025-11-02T16:00:00.000Z"
+  - Consider timezone handling (use user's local timezone)
 
-  - Export all submissions as CSV file
-  - One column per form field
-  - File URLs included as direct links
-  - "Export as CSV" button in submissions dashboard
-  - Handle nested JSON fields gracefully
+- ⬜ **Task 4.2.3:** Add submission count indicator
+  - Display total submissions in sheet title
+  - Example: "Contact Form Responses (23 submissions)"
+  - Show in artifact header
 
-- ⬜ **Task 4.3.2:** Add JSON export
-  - Export raw structured JSON array
-  - Useful for developers/integrations
-  - "Export as JSON" button
-  - Format:
-    ```json
-    [
-      { "email": "...", "rating": 5, "submittedAt": "..." },
-      { "email": "...", "rating": 4, "submittedAt": "..." }
-    ]
-    ```
+### 4.3 Conversational Data Export
 
-### 4.4 Form Settings & Management
+- ⬜ **Task 4.3.1:** Leverage existing sheet export
 
-- ⬜ **Task 4.4.1:** Create form settings page
+  - Sheet artifact already has CSV export via toolbar actions
+  - Users can click "Copy as CSV" and paste into Excel/Sheets
+  - No additional export UI needed - it's built-in!
 
-  - `app/(dashboard)/forms/[id]/settings/page.tsx`
-  - Edit form title and description
-  - Toggle active/inactive status (pause accepting responses)
-  - Change tone setting
-  - Delete form with confirmation dialog
+- ⬜ **Task 4.3.2:** Optional: Add JSON export action to sheet toolbar
+  - Add custom toolbar action in `artifacts/sheet/client.tsx`
+  - Convert CSV back to JSON array of objects
+  - Download as .json file
+  - Useful for developers/API integrations
 
-- ⬜ **Task 4.4.2:** Add form deletion with cascade
-  - Confirmation modal: "Delete form and all X submissions?"
-  - Cascade delete submissions and uploaded files
-  - Delete files from Vercel Blob storage
-  - Remove form reference from chat
+### 4.4 Conversational Form Management
+
+- ⬜ **Task 4.4.1:** Add `deleteForm` AI tool
+
+  - New file: `lib/ai/tools/delete-form.ts`
+  - User says: "delete this form", "remove my contact form"
+  - Confirmation prompt from AI before deletion
+  - Cascade delete: submissions, files from Blob storage, form record
+  - Uses existing `deleteForm()` query from `lib/db/queries.ts`
+
+- ⬜ **Task 4.4.2:** Add `getFormInfo` AI tool
+  - New file: `lib/ai/tools/get-form-info.ts`
+  - User asks: "how many submissions?", "is my form active?", "what's the link?"
+  - Returns: submission count, isActive status, shareable URL, creation date
+  - AI presents info conversationally
+  - No separate settings page needed
+
+---
+
+## ❌ REMOVED: Traditional Dashboard Pages
+
+**Rationale:** Staying true to AI-native vision. All form management happens through conversation.
+
+~~- `app/(dashboard)/forms/[id]/submissions/page.tsx`~~ - NOT NEEDED
+~~- `app/(dashboard)/forms/[id]/submissions/[submissionId]/page.tsx`~~ - NOT NEEDED
+~~- `app/(dashboard)/forms/[id]/settings/page.tsx`~~ - NOT NEEDED
+
+**Benefits of Conversational Approach:**
+- ✅ Consistent with product vision (no traditional UI)
+- ✅ Reuses existing sheet artifact infrastructure
+- ✅ Natural language is faster than clicking through pages
+- ✅ Less code to write and maintain
+- ✅ Mobile-friendly (no responsive dashboard layouts needed)
+- ✅ Unique differentiator vs traditional form builders
 
 ---
 
@@ -850,14 +871,22 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 
 ## Progress Summary
 
-**Total Core Tasks:** 68 (includes enhanced date parsing, deferred UI components)
-**Completed:** 39 (includes Phase 3.4 File Upload + Phase 3.5 Response Submission)
+**Total Core Tasks:** 50 (reduced from 68 by removing traditional dashboard pages)
+**Completed:** 39 (Phase 1-3 complete: Schema, Creation, Response Flow)
 **In Progress:** 0
-**Deferred:** 1 (Task 3.3 - Smart UI Component Switching - pure conversational approach)
-**Not Started:** 28
+**Deferred:** 2 (Task 2.3.6 - FormStatusCard enhancements, Task 3.3 - Smart UI Components)
+**Removed:** 18 (Traditional dashboard pages replaced with conversational tools)
+**Not Started:** 9 (Phase 4 conversational tools remaining)
 
 **Current Phase:** Phase 3 - Form Response Flow (Respondent Side) ✅ COMPLETED
-**Next Milestone:** Phase 4 - Response Dashboard (Creator Side) - View and manage submissions
+**Next Milestone:** Phase 4 - Conversational Submissions Viewer (Creator Side) - AI-native approach using Sheet artifacts
+
+**Major Architectural Decision (Nov 1, 2025):**
+- ❌ Removed all traditional dashboard pages (`/forms/[id]/submissions`, `/forms/[id]/settings`)
+- ✅ Adopted conversational interface for viewing submissions via Sheet artifacts
+- ✅ Users can say "show me submissions" → interactive spreadsheet in split-view
+- ✅ Built-in CSV export, file downloads, and natural language queries
+- 🎯 Significantly reduces code complexity while staying true to AI-native vision
 
 **Estimated Timeline:**
 

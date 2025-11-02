@@ -10,6 +10,7 @@ import type { requestSuggestions } from "./ai/tools/request-suggestions";
 import type { toggleFormStatus } from "./ai/tools/toggle-form-status";
 import type { updateDocument } from "./ai/tools/update-document";
 import type { updateFormSchema } from "./ai/tools/update-form-schema";
+import type { viewFormSubmissions } from "./ai/tools/view-form-submissions";
 import type { Suggestion } from "./db/schema";
 import type { AppUsage } from "./usage";
 
@@ -34,6 +35,9 @@ type updateFormSchemaTool = InferUITool<ReturnType<typeof updateFormSchema>>;
 type getFormTool = InferUITool<ReturnType<typeof getForm>>;
 type toggleFormStatusTool = InferUITool<ReturnType<typeof toggleFormStatus>>;
 type finalizeFormTool = InferUITool<ReturnType<typeof finalizeForm>>;
+type viewFormSubmissionsTool = InferUITool<
+  ReturnType<typeof viewFormSubmissions>
+>;
 // collectFieldResponse and submitFormResponse are used in form respond route only, not in ChatTools
 
 export type ChatTools = {
@@ -46,6 +50,7 @@ export type ChatTools = {
   getForm: getFormTool;
   toggleFormStatus: toggleFormStatusTool;
   finalizeForm: finalizeFormTool;
+  viewFormSubmissions: viewFormSubmissionsTool;
 };
 
 export type CustomUIDataTypes = {
