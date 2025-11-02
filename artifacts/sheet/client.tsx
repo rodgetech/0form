@@ -83,33 +83,5 @@ export const sheetArtifact = new Artifact<"sheet", Metadata>({
       },
     },
   ],
-  toolbar: [
-    {
-      description: "Format and clean data",
-      icon: <SparklesIcon />,
-      onClick: ({ sendMessage }) => {
-        sendMessage({
-          role: "user",
-          parts: [
-            { type: "text", text: "Can you please format and clean the data?" },
-          ],
-        });
-      },
-    },
-    {
-      description: "Analyze and visualize data",
-      icon: <LineChartIcon />,
-      onClick: ({ sendMessage }) => {
-        sendMessage({
-          role: "user",
-          parts: [
-            {
-              type: "text",
-              text: "Can you please analyze and visualize the data by creating a new code artifact in python?",
-            },
-          ],
-        });
-      },
-    },
-  ],
+  toolbar: [],
 });

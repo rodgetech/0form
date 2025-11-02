@@ -159,6 +159,12 @@ function formSubmissionsToCSV(
         // Handle date fields
         if (field.type === "date") {
           return new Date(String(value)).toLocaleString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
             timeZone: "UTC",
           });
         }
@@ -168,6 +174,12 @@ function formSubmissionsToCSV(
       }),
       // Add submission timestamp
       new Date(submission.submittedAt).toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
         timeZone: "UTC",
       }),
     ];

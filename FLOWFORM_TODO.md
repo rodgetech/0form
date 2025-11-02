@@ -477,19 +477,21 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 
 ### 4.2 Enhanced Sheet Display for Form Responses
 
-- ⬜ **Task 4.2.1:** Add file field rendering in sheet cells
+- ⏸️ **Task 4.2.1:** Add file field rendering in sheet cells - **DEFERRED**
 
-  - Modify `components/sheet-editor.tsx` or create custom cell renderer
-  - Detect URLs in cells (file field data)
-  - Render as clickable download links with file icon
-  - Show original filename (not full blob URL)
-  - Example: "📎 Resume.pdf" instead of "https://blob.vercel-storage.com/..."
+  - **Attempted:** Custom `renderCell` in `components/sheet-editor.tsx` with clickable file links
+  - **Issue:** Broke split-view auto-open behavior - reverted both CSV format change and renderCell
+  - **Current Approach:** Files show as "📎 filename" text in cells (simple, works)
+  - **Future:** May revisit with different approach that doesn't interfere with artifact initialization
+  - **Not blocking MVP:** Users can still see filenames and manually download from blob URLs if needed
 
-- ⬜ **Task 4.2.2:** Improve date formatting in CSV export
+- ✅ **Task 4.2.2:** Improve date formatting in CSV export
 
-  - Format ISO timestamps before CSV conversion
-  - User-friendly format: "Nov 2, 2025 4:00 PM" instead of "2025-11-02T16:00:00.000Z"
-  - Consider timezone handling (use user's local timezone)
+  - Enhanced `toLocaleString()` options in `lib/ai/tools/view-form-submissions.ts` ✅
+  - Date fields: Format as "Nov 2, 2025, 4:00 PM" instead of "11/2/2025, 4:00:00 PM" ✅
+  - Submission timestamps: Same improved formatting ✅
+  - Options: month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true ✅
+  - Timezone: UTC (consistent for all users) ✅
 
 - ⬜ **Task 4.2.3:** Add submission count indicator
   - Display total submissions in sheet title
@@ -872,14 +874,14 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 ## Progress Summary
 
 **Total Core Tasks:** 50 (reduced from 68 by removing traditional dashboard pages)
-**Completed:** 39 (Phase 1-3 complete: Schema, Creation, Response Flow)
+**Completed:** 42 (Phase 1-3 complete + Phase 4.1 complete + Task 4.2.2 complete)
 **In Progress:** 0
-**Deferred:** 2 (Task 2.3.6 - FormStatusCard enhancements, Task 3.3 - Smart UI Components)
+**Deferred:** 3 (Task 2.3.6 - FormStatusCard enhancements, Task 3.3 - Smart UI Components, Task 4.2.1 - Clickable file links)
 **Removed:** 18 (Traditional dashboard pages replaced with conversational tools)
-**Not Started:** 9 (Phase 4 conversational tools remaining)
+**Not Started:** 5 (Tasks 4.2.3, 4.3.1, 4.3.2, 4.4.1, 4.4.2 remaining)
 
-**Current Phase:** Phase 3 - Form Response Flow (Respondent Side) ✅ COMPLETED
-**Next Milestone:** Phase 4 - Conversational Submissions Viewer (Creator Side) - AI-native approach using Sheet artifacts
+**Current Phase:** Phase 4 - Conversational Submissions Viewer (Creator Side) 🔄 IN PROGRESS
+**Next Milestone:** Complete Phase 4.2-4.4 (Enhanced display, export, and form management tools)
 
 **Major Architectural Decision (Nov 1, 2025):**
 - ❌ Removed all traditional dashboard pages (`/forms/[id]/submissions`, `/forms/[id]/settings`)
@@ -903,4 +905,7 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 
 _Last Updated: November 1, 2025_
 _Updated By: Claude + Luis_
-_Recent Completion: Phase 3 - Complete conversational form filling with file upload support_
+_Recent Completions:_
+- Phase 3: Complete conversational form filling with file upload support ✅
+- Phase 4.1: View Form Submissions Tool (viewFormSubmissions with Sheet artifact) ✅
+- Task 4.2.2: Improved date formatting in CSV export ✅
