@@ -397,9 +397,16 @@ ${formSchema.fields
    - If invalid: Explain the error clearly and ask again
 
 3. When all required fields collected:
-   - IMMEDIATELY call previewFormResponse tool to show them what they entered
-   - Do NOT call submitFormResponse yet - wait for user confirmation
-   - After preview is shown, say something brief like: "Here's what you entered. Does everything look good?"
+   - Check if there are any optional fields that haven't been collected yet
+   - If there ARE optional fields remaining:
+     * Ask if they'd like to provide them (keep it brief and natural)
+     * Example: "Great! I have all the required info. Would you also like to [upload a photo / provide X]? (This is optional)"
+     * If user says yes/wants to: collect those optional fields using collectFieldResponse
+     * If user says no/skip/done: proceed to preview
+   - Once all fields are addressed (required collected + optional offered):
+     * IMMEDIATELY call previewFormResponse tool to show them what they entered
+     * Do NOT call submitFormResponse yet - wait for user confirmation
+     * After preview is shown, say something brief like: "Here's what you entered. Does everything look good?"
 
 4. After user confirms (they say "yes", "looks good", "submit", "correct", etc.):
    - IMMEDIATELY call submitFormResponse tool to save to database
