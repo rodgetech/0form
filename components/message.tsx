@@ -351,38 +351,32 @@ const PurePreviewMessage = ({
               );
             }
 
-            // @ts-expect-error - previewFormResponse is used in form respond route only
+            // @ts-ignore - previewFormResponse is used in form respond route only
             if (type === "tool-previewFormResponse") {
-              // @ts-expect-error - previewFormResponse is used in form respond route only
-              const { toolCallId, state } = part;
+              const toolPart = part as any;
+              const { toolCallId, state } = toolPart;
 
               return (
                 <Tool defaultOpen={true} key={toolCallId}>
-                  {/* @ts-expect-error - previewFormResponse is used in form respond route only */}
                   <ToolHeader state={state} type="tool-previewFormResponse" />
                   <ToolContent>
                     {state === "input-available" && (
-                      // @ts-expect-error - previewFormResponse is used in form respond route only
-                      <ToolInput input={part.input} />
+                      <ToolInput input={toolPart.input} />
                     )}
                     {state === "output-available" && (
                       <ToolOutput
                         errorText={
-                          // @ts-expect-error - previewFormResponse is used in form respond route only
-                          part.output && "error" in part.output
-                            ? String(part.output.error)
+                          toolPart.output && "error" in toolPart.output
+                            ? String(toolPart.output.error)
                             : undefined
                         }
                         output={
-                          // @ts-expect-error - previewFormResponse is used in form respond route only
-                          part.output &&
-                          "schema" in part.output &&
-                          "responses" in part.output ? (
+                          toolPart.output &&
+                          "schema" in toolPart.output &&
+                          "responses" in toolPart.output ? (
                             <FormResponsePreview
-                              // @ts-expect-error - previewFormResponse is used in form respond route only
-                              responses={part.output.responses}
-                              // @ts-expect-error - previewFormResponse is used in form respond route only
-                              schema={part.output.schema}
+                              responses={toolPart.output.responses}
+                              schema={toolPart.output.schema}
                             />
                           ) : null
                         }
