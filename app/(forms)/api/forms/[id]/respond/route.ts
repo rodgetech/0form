@@ -63,17 +63,52 @@ export async function POST(
       }>;
     };
 
+    // Extract file metadata from messages and filter out file parts
+    // The AI model doesn't need the actual file content, only metadata for validation
+    const fileMetadata: Array<{
+      url: string;
+      filename: string;
+      mimeType: string;
+    }> = [];
+
+    const messagesWithoutFiles = clientMessages.map((message) => {
+      if (message.role === "user" && message.parts) {
+        const filteredParts = message.parts.filter((part) => {
+          if (part.type === "file") {
+            // Extract metadata before filtering
+            fileMetadata.push({
+              url: part.url,
+              filename: part.name || part.filename || "unknown",
+              mimeType: part.mediaType,
+            });
+            return false; // Remove file part
+          }
+          return true; // Keep non-file parts
+        });
+
+        return { ...message, parts: filteredParts };
+      }
+      return message;
+    });
+
+    // Build file metadata context for system prompt
+    const fileContext =
+      fileMetadata.length > 0
+        ? `\n\n**File Uploads Context:**\nThe user has uploaded the following files. Extract this information to pass to the collectFieldResponse tool:\n${fileMetadata.map((file) => `- URL: ${file.url}\n  Filename: ${file.filename}\n  MIME Type: ${file.mimeType}`).join("\n")}\n`
+        : "";
+
     const stream = createUIMessageStream({
       execute: ({ writer: dataStream }) => {
         const result = streamText({
           model: myProvider.languageModel("chat-model"),
-          system: formFillingPrompt({
-            title: form.title,
-            description: form.description ?? undefined,
-            fields: schema.fields,
-            tone: form.tone,
-          }),
-          messages: convertToModelMessages(clientMessages),
+          system:
+            formFillingPrompt({
+              title: form.title,
+              description: form.description ?? undefined,
+              fields: schema.fields,
+              tone: form.tone,
+            }) + fileContext,
+          messages: convertToModelMessages(messagesWithoutFiles),
           stopWhen: stepCountIs(10),
           experimental_activeTools: [
             "collectFieldResponse",

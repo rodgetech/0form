@@ -3,12 +3,17 @@
  * Used by collect-field-response and submit-form-response tools
  */
 
-import * as chrono from "chrono-node";
+import { parseDate } from "chrono-node";
 
 export type ValidationResult = {
   valid: boolean;
   error?: string;
-  parsedValue?: string; // For date fields, returns ISO string
+  parsedValue?: string; // For date fields, returns ISO string; for files, returns blob URL
+  fileMetadata?: {
+    url: string;
+    name: string;
+    mimeType: string;
+  };
 };
 
 export type FormField = {
@@ -43,6 +48,14 @@ export type FormField = {
 // Regex constants for validation (moved to top level for performance)
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_REGEX = /^\+?[\d\s()-]{10,}$/;
+
+// Time detection regex patterns (moved to top level for performance)
+const TIME_PATTERNS = [
+  /\d{1,2}:\d{2}/, // 3:30, 14:00
+  /\d{1,2}\s*(am|pm)/i, // 3pm, 4 PM
+  /\bat\s+\d/i, // "at 3", "at 14"
+  /(noon|midnight|morning|afternoon|evening|night)/i,
+];
 
 /**
  * Validate email format
@@ -102,15 +115,7 @@ export function validateNumber(
 function hasTimeComponent(value: string): boolean {
   const lowerValue = value.toLowerCase().trim();
 
-  // Time patterns: "at 3pm", "2:30", "noon", "midnight", "morning", "evening"
-  const timePatterns = [
-    /\d{1,2}:\d{2}/, // 3:30, 14:00
-    /\d{1,2}\s*(am|pm)/i, // 3pm, 4 PM
-    /\bat\s+\d/i, // "at 3", "at 14"
-    /(noon|midnight|morning|afternoon|evening|night)/i,
-  ];
-
-  return timePatterns.some((pattern) => pattern.test(lowerValue));
+  return TIME_PATTERNS.some((pattern) => pattern.test(lowerValue));
 }
 
 /**
@@ -141,7 +146,7 @@ export function validateDate(
   }
 
   // Parse natural language date using chrono-node
-  const parsed = chrono.parseDate(value);
+  const parsed = parseDate(value);
 
   if (!parsed) {
     return {
@@ -298,10 +303,11 @@ export function validateFieldType(
     }
 
     case "file": {
-      // File uploads handled separately in Phase 3.4
+      // File validation requires file metadata
+      // This should be called with validateFile() instead
       return {
         valid: false,
-        error: "File uploads are not yet supported",
+        error: "Please upload a file",
       };
     }
 
@@ -309,4 +315,72 @@ export function validateFieldType(
       return { valid: false, error: "Unknown field type" };
     }
   }
+}
+
+export function validateFile(
+  field: FormField,
+  fileUrl: string,
+  fileName: string,
+  mimeType: string
+): ValidationResult {
+  // Check if required field
+  if (field.required && (!fileUrl || !fileName)) {
+    return { valid: false, error: "Please upload a file" };
+  }
+
+  // If optional and no file provided, that's okay
+  if (!field.required && (!fileUrl || !fileName)) {
+    return { valid: true };
+  }
+
+  // Validate file type against accepted types
+  const acceptedTypes = field.validation?.acceptedTypes || [];
+
+  if (acceptedTypes.length > 0) {
+    // Map extensions to MIME types
+    const mimeTypeMap: Record<string, string[]> = {
+      ".pdf": ["application/pdf"],
+      ".doc": ["application/msword"],
+      ".docx": [
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ],
+      ".xls": ["application/vnd.ms-excel"],
+      ".xlsx": [
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      ],
+      ".csv": ["text/csv"],
+      ".txt": ["text/plain"],
+      ".jpg": ["image/jpeg"],
+      ".jpeg": ["image/jpeg"],
+      ".png": ["image/png"],
+      ".gif": ["image/gif"],
+      ".svg": ["image/svg+xml"],
+    };
+
+    const allowedMimeTypes: string[] = [];
+    for (const ext of acceptedTypes) {
+      const mimes = mimeTypeMap[ext.toLowerCase()];
+      if (mimes) {
+        allowedMimeTypes.push(...mimes);
+      }
+    }
+
+    if (allowedMimeTypes.length > 0 && !allowedMimeTypes.includes(mimeType)) {
+      return {
+        valid: false,
+        error: `File type not accepted. Please upload: ${acceptedTypes.join(", ")}`,
+      };
+    }
+  }
+
+  // Return file metadata for storage
+  return {
+    valid: true,
+    parsedValue: fileUrl,
+    fileMetadata: {
+      url: fileUrl,
+      name: fileName,
+      mimeType,
+    },
+  };
 }

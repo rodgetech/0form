@@ -215,11 +215,24 @@ function renderFieldInput(field: FormField, value?: unknown) {
 
     case "file":
       if (value) {
+        // File value can be either:
+        // 1. Object with {url, name, mimeType} OR {url, filename, mimeType} (new format)
+        // 2. String URL (legacy format)
+        const isFileObject =
+          typeof value === "object" &&
+          value !== null &&
+          "url" in value &&
+          ("name" in value || "filename" in value);
+
+        const displayName = isFileObject
+          ? value.filename || value.name
+          : typeof value === "string"
+            ? value
+            : "File uploaded";
+
         return (
           <div className="rounded-md border bg-muted/50 px-3 py-2">
-            <p className="text-sm">
-              📎 {typeof value === "string" ? value : "File uploaded"}
-            </p>
+            <p className="text-sm">📎 {displayName}</p>
           </div>
         );
       }

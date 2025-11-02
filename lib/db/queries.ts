@@ -26,6 +26,7 @@ import {
   type DBMessage,
   document,
   form,
+  formFile,
   formSubmission,
   message,
   type Suggestion,
@@ -776,6 +777,47 @@ export async function createFormSubmission({
     throw new ChatSDKError(
       "bad_request:database",
       "Failed to create form submission"
+    );
+  }
+}
+
+export async function createFormFile({
+  submissionId,
+  formId,
+  fieldName,
+  blobUrl,
+  fileName,
+  fileSize,
+  mimeType,
+}: {
+  submissionId: string;
+  formId: string;
+  fieldName: string;
+  blobUrl: string;
+  fileName: string;
+  fileSize: string;
+  mimeType: string;
+}) {
+  try {
+    const [file] = await db
+      .insert(formFile)
+      .values({
+        submissionId,
+        formId,
+        fieldName,
+        blobUrl,
+        fileName,
+        fileSize,
+        mimeType,
+        uploadedAt: new Date(),
+      })
+      .returning();
+
+    return file;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to create form file record"
     );
   }
 }
