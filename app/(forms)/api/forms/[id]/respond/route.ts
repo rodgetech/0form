@@ -27,15 +27,23 @@ export async function POST(
   const { id: formId } = params;
 
   // Validate request body
-  let requestBody: { messages: ChatMessage[] };
-
   try {
     const json = await request.json();
-    requestBody = postRequestBodySchema.parse(json);
+    const validatedBody = postRequestBodySchema.parse(json);
+    // Type assertion: validated schema matches ChatMessage structure
+    const requestBody = validatedBody as { messages: ChatMessage[] };
+
+    return await handleFormResponse(requestBody, formId, request);
   } catch (_) {
     return new ChatSDKError("bad_request:api").toResponse();
   }
+}
 
+async function handleFormResponse(
+  requestBody: { messages: ChatMessage[] },
+  formId: string,
+  request: Request
+) {
   try {
     const { messages: clientMessages } = requestBody;
 
@@ -49,7 +57,7 @@ export async function POST(
 
     // Validate form is active
     if (!form.isActive) {
-      return new ChatSDKError("forbidden:form_inactive").toResponse();
+      return new ChatSDKError("forbidden:form").toResponse();
     }
 
     // Parse form schema for the prompt
@@ -76,10 +84,17 @@ export async function POST(
         const filteredParts = message.parts.filter((part) => {
           if (part.type === "file") {
             // Extract metadata before filtering
+            // Type assertion: we know it's a file part, so it has url and mediaType
+            const filePart = part as {
+              url: string;
+              mediaType: string;
+              name?: string;
+              filename?: string;
+            };
             fileMetadata.push({
-              url: part.url,
-              filename: part.name || part.filename || "unknown",
-              mimeType: part.mediaType,
+              url: filePart.url,
+              filename: filePart.name || filePart.filename || "unknown",
+              mimeType: filePart.mediaType,
             });
             return false; // Remove file part
           }
