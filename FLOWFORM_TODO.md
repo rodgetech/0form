@@ -820,6 +820,14 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
   - Add pagination or increase limit (e.g., 1000+)
   - Add warning when hitting limit: "Showing first 100 of X submissions"
   - Consider lazy loading or "Load More" functionality
+- ⬜ **Refresh submissions data in existing artifacts**
+  - Current behavior: Artifacts are snapshots (show data from creation time)
+  - Issue: If new submissions arrive, old artifacts still show old data
+  - Solution options:
+    - Add "Refresh" button to re-fetch current submissions
+    - Add auto-refresh when artifact is reopened
+    - Update AI prompt to suggest asking again for fresh data
+  - For MVP: Users must ask "show me submissions" again to see new data
 
 ### v2.0 - Platform Expansion
 
