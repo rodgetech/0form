@@ -31,6 +31,7 @@ import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { toggleFormStatus } from "@/lib/ai/tools/toggle-form-status";
 import { updateDocument } from "@/lib/ai/tools/update-document";
 import { updateFormSchema } from "@/lib/ai/tools/update-form-schema";
+import { viewFormSubmissions } from "@/lib/ai/tools/view-form-submissions";
 import { isProductionEnvironment } from "@/lib/constants";
 import {
   createStreamId,
@@ -198,6 +199,7 @@ export async function POST(request: Request) {
                   "getForm",
                   "toggleFormStatus",
                   "finalizeForm",
+                  "viewFormSubmissions",
                 ],
           experimental_transform: smoothStream({ chunking: "word" }),
           tools: {
@@ -220,6 +222,11 @@ export async function POST(request: Request) {
             getForm: getForm({ session, chatId: id }),
             toggleFormStatus: toggleFormStatus({ session, chatId: id }),
             finalizeForm: finalizeForm({ session, chatId: id }),
+            viewFormSubmissions: viewFormSubmissions({
+              session,
+              dataStream,
+              chatId: id,
+            }),
           },
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,
