@@ -815,6 +815,11 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 - ⬜ Multi-language support (i18n)
 - ⬜ Conditional logic (skip questions based on answers)
 - ⬜ Multi-page/sectioned forms
+- ⬜ **Submissions pagination/infinite scroll**
+  - Current limit: 100 submissions max in sheet view
+  - Add pagination or increase limit (e.g., 1000+)
+  - Add warning when hitting limit: "Showing first 100 of X submissions"
+  - Consider lazy loading or "Load More" functionality
 
 ### v2.0 - Platform Expansion
 
