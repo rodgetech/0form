@@ -63,6 +63,7 @@ function PureMultimodalInput({
   selectedModelId,
   onModelChange,
   usage,
+  enableUrlNavigation = true,
 }: {
   chatId: string;
   input: string;
@@ -79,6 +80,7 @@ function PureMultimodalInput({
   selectedModelId: string;
   onModelChange?: (modelId: string) => void;
   usage?: AppUsage;
+  enableUrlNavigation?: boolean;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -130,7 +132,9 @@ function PureMultimodalInput({
   const [uploadQueue, setUploadQueue] = useState<string[]>([]);
 
   const submitForm = useCallback(() => {
-    window.history.replaceState({}, "", `/chat/${chatId}`);
+    if (enableUrlNavigation) {
+      window.history.replaceState({}, "", `/chat/${chatId}`);
+    }
 
     sendMessage({
       role: "user",
@@ -166,34 +170,62 @@ function PureMultimodalInput({
     width,
     chatId,
     resetHeight,
+    enableUrlNavigation,
   ]);
 
-  const uploadFile = useCallback(async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
+  const uploadFile = useCallback(
+    async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
 
-    try {
-      const response = await fetch("/api/files/upload", {
-        method: "POST",
-        body: formData,
-      });
+      // Use public upload endpoint for public forms (no auth required)
+      const isPublicForm = selectedVisibilityType === "public";
+      const uploadEndpoint = isPublicForm
+        ? "/api/flowform/upload"
+        : "/api/files/upload";
 
-      if (response.ok) {
-        const data = await response.json();
-        const { url, pathname, contentType } = data;
-
-        return {
-          url,
-          name: pathname,
-          contentType,
-        };
+      // Add formId for public forms
+      if (isPublicForm) {
+        formData.append("formId", chatId);
+        // Note: fieldName is optional - file type validation happens in collectFieldResponse tool
+        // when AI knows which field this file is for
+        formData.append("fieldName", "file");
       }
-      const { error } = await response.json();
-      toast.error(error);
-    } catch (_error) {
-      toast.error("Failed to upload file, please try again!");
-    }
-  }, []);
+
+      try {
+        const response = await fetch(uploadEndpoint, {
+          method: "POST",
+          body: formData,
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+
+          if (isPublicForm) {
+            // Public endpoint returns: { url, filename, size, mimeType }
+            return {
+              url: data.url,
+              name: data.filename,
+              contentType: data.mimeType,
+            };
+          }
+
+          // Regular endpoint returns: { url, pathname, contentType }
+          const { url, pathname, contentType } = data;
+          return {
+            url,
+            name: pathname,
+            contentType,
+          };
+        }
+        const { error } = await response.json();
+        toast.error(error);
+      } catch (_error) {
+        toast.error("Failed to upload file, please try again!");
+      }
+    },
+    [selectedVisibilityType, chatId]
+  );
 
   const _modelResolver = useMemo(() => {
     return myProvider.languageModel(selectedModelId);

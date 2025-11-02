@@ -19,6 +19,7 @@ import {
   ToolOutput,
 } from "./elements/tool";
 import { FormPreview } from "./flowform/form-preview";
+import { FormResponsePreview } from "./flowform/form-response-preview";
 import { FormStatusCard } from "./flowform/form-status-card";
 import { SparklesIcon } from "./icons";
 import { MessageActions } from "./message-actions";
@@ -341,6 +342,42 @@ const PurePreviewMessage = ({
                         output={
                           part.output && "formId" in part.output ? (
                             <FormStatusCard formId={part.output.formId} />
+                          ) : null
+                        }
+                      />
+                    )}
+                  </ToolContent>
+                </Tool>
+              );
+            }
+
+            // @ts-ignore - previewFormResponse is used in form respond route only
+            if (type === "tool-previewFormResponse") {
+              const toolPart = part as any;
+              const { toolCallId, state } = toolPart;
+
+              return (
+                <Tool defaultOpen={true} key={toolCallId}>
+                  <ToolHeader state={state} type="tool-previewFormResponse" />
+                  <ToolContent>
+                    {state === "input-available" && (
+                      <ToolInput input={toolPart.input} />
+                    )}
+                    {state === "output-available" && (
+                      <ToolOutput
+                        errorText={
+                          toolPart.output && "error" in toolPart.output
+                            ? String(toolPart.output.error)
+                            : undefined
+                        }
+                        output={
+                          toolPart.output &&
+                          "schema" in toolPart.output &&
+                          "responses" in toolPart.output ? (
+                            <FormResponsePreview
+                              responses={toolPart.output.responses}
+                              schema={toolPart.output.schema}
+                            />
                           ) : null
                         }
                       />

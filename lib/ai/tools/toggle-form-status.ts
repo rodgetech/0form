@@ -8,10 +8,7 @@ type ToggleFormStatusProps = {
   chatId: string;
 };
 
-export const toggleFormStatus = ({
-  session,
-  chatId,
-}: ToggleFormStatusProps) =>
+export const toggleFormStatus = ({ session, chatId }: ToggleFormStatusProps) =>
   tool({
     description:
       "Toggle the form status between published (active) and paused (inactive). Use this when users want to pause, unpublish, republish, or reactivate their form. The tool automatically detects the current status and toggles it to the opposite state. Common user requests: 'pause this form', 'unpublish the form', 'make it live again', 'republish this form', 'turn it back on'.",

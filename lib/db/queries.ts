@@ -21,13 +21,13 @@ import { ChatSDKError } from "../errors";
 import type { AppUsage } from "../usage";
 import { generateUUID } from "../utils";
 import {
-  type Chat,
   type ChatWithForm,
   chat,
   type DBMessage,
   document,
-  type Form,
   form,
+  formFile,
+  formSubmission,
   message,
   type Suggestion,
   stream,
@@ -181,7 +181,10 @@ export async function getChatsByUserId({
           userId: chat.userId,
           visibility: chat.visibility,
           lastContext: chat.lastContext,
-          hasForm: sql<boolean>`${form.id} IS NOT NULL AND ${form.isActive} IS TRUE`.as("hasForm"),
+          hasForm:
+            sql<boolean>`${form.id} IS NOT NULL AND ${form.isActive} IS TRUE`.as(
+              "hasForm"
+            ),
         })
         .from(chat)
         .leftJoin(form, eq(form.chatId, chat.id))
@@ -706,11 +709,21 @@ export async function updateForm({
       updatedAt: new Date(),
     };
 
-    if (title !== undefined) updateData.title = title;
-    if (description !== undefined) updateData.description = description;
-    if (schema !== undefined) updateData.schema = schema;
-    if (tone !== undefined) updateData.tone = tone;
-    if (isActive !== undefined) updateData.isActive = isActive;
+    if (title !== undefined) {
+      updateData.title = title;
+    }
+    if (description !== undefined) {
+      updateData.description = description;
+    }
+    if (schema !== undefined) {
+      updateData.schema = schema;
+    }
+    if (tone !== undefined) {
+      updateData.tone = tone;
+    }
+    if (isActive !== undefined) {
+      updateData.isActive = isActive;
+    }
 
     const [updatedForm] = await db
       .update(form)
@@ -734,5 +747,120 @@ export async function deleteForm({ id }: { id: string }) {
     return deletedForm;
   } catch (_error) {
     throw new ChatSDKError("bad_request:database", "Failed to delete form");
+  }
+}
+
+// FORM SUBMISSION QUERIES
+
+export async function createFormSubmission({
+  formId,
+  responses,
+  metadata,
+}: {
+  formId: string;
+  responses: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
+}) {
+  try {
+    const [submission] = await db
+      .insert(formSubmission)
+      .values({
+        formId,
+        responses,
+        metadata: metadata ?? {},
+        submittedAt: new Date(),
+      })
+      .returning();
+
+    return submission;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to create form submission"
+    );
+  }
+}
+
+export async function createFormFile({
+  submissionId,
+  formId,
+  fieldName,
+  blobUrl,
+  fileName,
+  fileSize,
+  mimeType,
+}: {
+  submissionId: string;
+  formId: string;
+  fieldName: string;
+  blobUrl: string;
+  fileName: string;
+  fileSize: string;
+  mimeType: string;
+}) {
+  try {
+    const [file] = await db
+      .insert(formFile)
+      .values({
+        submissionId,
+        formId,
+        fieldName,
+        blobUrl,
+        fileName,
+        fileSize,
+        mimeType,
+        uploadedAt: new Date(),
+      })
+      .returning();
+
+    return file;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to create form file record"
+    );
+  }
+}
+
+export async function getSubmissionsByFormId({
+  formId,
+  limit = 20,
+  offset = 0,
+}: {
+  formId: string;
+  limit?: number;
+  offset?: number;
+}) {
+  try {
+    const submissions = await db
+      .select()
+      .from(formSubmission)
+      .where(eq(formSubmission.formId, formId))
+      .orderBy(desc(formSubmission.submittedAt))
+      .limit(limit)
+      .offset(offset);
+
+    return submissions;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to fetch form submissions"
+    );
+  }
+}
+
+export async function getSubmissionCount({ formId }: { formId: string }) {
+  try {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(formSubmission)
+      .where(eq(formSubmission.formId, formId));
+
+    return result[0]?.count ?? 0;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to count form submissions"
+    );
   }
 }

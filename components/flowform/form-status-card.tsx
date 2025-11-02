@@ -15,7 +15,7 @@ export function FormStatusCard({ formId }: FormStatusCardProps) {
   const [_, copyToClipboard] = useCopyToClipboard();
   const [copied, setCopied] = useState(false);
 
-  const formUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/form/${formId}`;
+  const formUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/f/${formId}`;
 
   const handleCopy = async () => {
     await copyToClipboard(formUrl);
@@ -28,7 +28,7 @@ export function FormStatusCard({ formId }: FormStatusCardProps) {
     <Card className="w-full">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
-          <CheckCircleFillIcon  />
+          <CheckCircleFillIcon />
           <CardTitle className="font-semibold text-lg">
             Form Published Successfully!
           </CardTitle>
@@ -46,7 +46,7 @@ export function FormStatusCard({ formId }: FormStatusCardProps) {
             value={formUrl}
           />
           <Button onClick={handleCopy} size="sm" variant="outline">
-            <CopyIcon  />
+            <CopyIcon />
             {copied ? "Copied!" : "Copy"}
           </Button>
         </div>
