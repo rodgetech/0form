@@ -1,7 +1,13 @@
 import { tool } from "ai";
 import type { Session } from "next-auth";
 import { z } from "zod";
-import { createForm, getFormByChatId, updateForm } from "@/lib/db/queries";
+import { entitlementsByUserType } from "@/lib/ai/entitlements";
+import {
+  createForm,
+  getFormByChatId,
+  getFormCountByUserId,
+  updateForm,
+} from "@/lib/db/queries";
 
 type FinalizeFormProps = {
   session: Session;
@@ -25,7 +31,7 @@ export const finalizeForm = ({ session, chatId }: FinalizeFormProps) =>
       const existingForm = await getFormByChatId({ chatId });
 
       if (existingForm) {
-        // Update existing form
+        // Update existing form - no limit check needed for updates
         const updatedForm = await updateForm({
           id: existingForm.id,
           title,
@@ -36,6 +42,23 @@ export const finalizeForm = ({ session, chatId }: FinalizeFormProps) =>
 
         return {
           formId: updatedForm.id,
+        };
+      }
+
+      // Creating new form - check form limit
+      const userType = session.user.type;
+      const formCount = await getFormCountByUserId({ userId: session.user.id });
+      const maxForms = entitlementsByUserType[userType].maxForms;
+
+      if (formCount >= maxForms) {
+        // User has reached their form limit
+        const errorMessage =
+          userType === "guest"
+            ? `You've reached your form limit (${maxForms} form). Create an account to unlock up to 3 forms!`
+            : `You've reached your form limit (${maxForms} forms). You can still edit your existing forms.`;
+
+        return {
+          error: errorMessage,
         };
       }
 
