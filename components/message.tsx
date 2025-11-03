@@ -340,7 +340,9 @@ const PurePreviewMessage = ({
                             : undefined
                         }
                         output={
-                          part.output && "formId" in part.output ? (
+                          part.output &&
+                          "formId" in part.output &&
+                          typeof part.output.formId === "string" ? (
                             <FormStatusCard formId={part.output.formId} />
                           ) : null
                         }
