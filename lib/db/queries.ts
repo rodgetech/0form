@@ -689,6 +689,23 @@ export async function getFormsByUserId({ userId }: { userId: string }) {
   }
 }
 
+export async function getFormCountByUserId({ userId }: { userId: string }) {
+  try {
+    const [stats] = await db
+      .select({ count: count(form.id) })
+      .from(form)
+      .where(eq(form.userId, userId))
+      .execute();
+
+    return stats?.count ?? 0;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get form count by user id"
+    );
+  }
+}
+
 export async function updateForm({
   id,
   title,
