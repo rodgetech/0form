@@ -17,6 +17,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  /*
+   * Public form routes (/f/[id]) and form API routes should not require authentication
+   * These are publicly accessible forms that anyone can fill out
+   */
+  if (pathname.startsWith("/f/") || pathname.startsWith("/api/forms/")) {
+    return NextResponse.next();
+  }
+
   const token = await getToken({
     req: request,
     secret: process.env.AUTH_SECRET,
@@ -53,7 +61,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico, sitemap.xml, robots.txt (metadata files)
+     * - *.js, *.css, *.png, *.jpg, *.jpeg, *.gif, *.svg, *.ico (static assets)
      */
-    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.js$|.*\\.css$|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.gif$|.*\\.svg$|.*\\.ico$).*)",
   ],
 };

@@ -1,5 +1,6 @@
 import type { UserType } from "@/app/(auth)/auth";
 import type { ChatModel } from "./models";
+import { isDevelopmentEnvironment } from "@/lib/constants";
 
 type Entitlements = {
   maxMessagesPerDay: number;
@@ -19,10 +20,12 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
 
   /*
    * For users with an account
+   * In development: unlimited messages and forms for easier testing
+   * In production: limits enforced
    */
   regular: {
-    maxMessagesPerDay: 100,
-    maxForms: 3,
+    maxMessagesPerDay: isDevelopmentEnvironment ? Number.MAX_SAFE_INTEGER : 100,
+    maxForms: isDevelopmentEnvironment ? Number.MAX_SAFE_INTEGER : 3,
     availableChatModelIds: ["chat-model", "chat-model-reasoning"],
   },
 
