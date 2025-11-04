@@ -7,6 +7,7 @@ import { CheckCircleFillIcon, CopyIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CodeBlock } from "@/components/elements/code-block";
 
 type FormStatusCardProps = {
   formId: string;
@@ -15,7 +16,6 @@ type FormStatusCardProps = {
 export function FormStatusCard({ formId }: FormStatusCardProps) {
   const [_, copyToClipboard] = useCopyToClipboard();
   const [copiedLink, setCopiedLink] = useState(false);
-  const [copiedIframe, setCopiedIframe] = useState(false);
   const [embedMode, setEmbedMode] = useState<"inline" | "fullpage">("inline");
   const [theme, setTheme] = useState<"system" | "light" | "dark">("system");
 
@@ -63,13 +63,6 @@ export function FormStatusCard({ formId }: FormStatusCardProps) {
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  const handleCopyIframe = async () => {
-    await copyToClipboard(embedCode);
-    setCopiedIframe(true);
-    toast.success("Embed code copied to clipboard!");
-    setTimeout(() => setCopiedIframe(false), 2000);
-  };
-
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
@@ -108,50 +101,52 @@ export function FormStatusCard({ formId }: FormStatusCardProps) {
 
           <TabsContent className="space-y-4" value="embed">
             <div className="space-y-3">
-              <div className="space-y-2">
-                <p className="font-medium text-sm">Embed Type</p>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => setEmbedMode("inline")}
-                    size="sm"
-                    variant={embedMode === "inline" ? "default" : "outline"}
-                  >
-                    Inline
-                  </Button>
-                  <Button
-                    onClick={() => setEmbedMode("fullpage")}
-                    size="sm"
-                    variant={embedMode === "fullpage" ? "default" : "outline"}
-                  >
-                    Full Page
-                  </Button>
+              <div className="flex gap-6">
+                <div className="space-y-2">
+                  <p className="font-medium text-sm">Embed Type</p>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => setEmbedMode("inline")}
+                      size="sm"
+                      variant={embedMode === "inline" ? "default" : "outline"}
+                    >
+                      Inline
+                    </Button>
+                    <Button
+                      onClick={() => setEmbedMode("fullpage")}
+                      size="sm"
+                      variant={embedMode === "fullpage" ? "default" : "outline"}
+                    >
+                      Full Page
+                    </Button>
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <p className="font-medium text-sm">Theme</p>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => setTheme("system")}
-                    size="sm"
-                    variant={theme === "system" ? "default" : "outline"}
-                  >
-                    System
-                  </Button>
-                  <Button
-                    onClick={() => setTheme("light")}
-                    size="sm"
-                    variant={theme === "light" ? "default" : "outline"}
-                  >
-                    Light
-                  </Button>
-                  <Button
-                    onClick={() => setTheme("dark")}
-                    size="sm"
-                    variant={theme === "dark" ? "default" : "outline"}
-                  >
-                    Dark
-                  </Button>
+                <div className="space-y-2">
+                  <p className="font-medium text-sm">Theme</p>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => setTheme("system")}
+                      size="sm"
+                      variant={theme === "system" ? "default" : "outline"}
+                    >
+                      System
+                    </Button>
+                    <Button
+                      onClick={() => setTheme("light")}
+                      size="sm"
+                      variant={theme === "light" ? "default" : "outline"}
+                    >
+                      Light
+                    </Button>
+                    <Button
+                      onClick={() => setTheme("dark")}
+                      size="sm"
+                      variant={theme === "dark" ? "default" : "outline"}
+                    >
+                      Dark
+                    </Button>
+                  </div>
                 </div>
               </div>
 
@@ -162,20 +157,7 @@ export function FormStatusCard({ formId }: FormStatusCardProps) {
                     ? "Paste this code in your HTML where you want the form to appear."
                     : "Save this as an HTML file and host it on your website."}
                 </p>
-                <div className="relative">
-                  <pre className="overflow-x-auto rounded-md border bg-muted p-3 font-mono text-xs">
-                    {embedCode}
-                  </pre>
-                  <Button
-                    className="absolute top-2 right-2"
-                    onClick={handleCopyIframe}
-                    size="sm"
-                    variant="outline"
-                  >
-                    <CopyIcon />
-                    {copiedIframe ? "Copied!" : "Copy"}
-                  </Button>
-                </div>
+                <CodeBlock code={embedCode} language="html" showLineNumbers={false} />
               </div>
             </div>
           </TabsContent>
