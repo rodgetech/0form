@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Content-Security-Policy",
-            value: "frame-ancestors 'self' https: http:",
+            value: "frame-ancestors *",
           },
         ],
       },
