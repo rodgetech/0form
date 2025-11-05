@@ -26,7 +26,6 @@ import { createDocument } from "@/lib/ai/tools/create-document";
 import { finalizeForm } from "@/lib/ai/tools/finalize-form";
 import { generateFormSchema } from "@/lib/ai/tools/generate-form-schema";
 import { getForm } from "@/lib/ai/tools/get-form";
-import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { toggleFormStatus } from "@/lib/ai/tools/toggle-form-status";
 import { updateDocument } from "@/lib/ai/tools/update-document";
@@ -190,7 +189,6 @@ export async function POST(request: Request) {
             selectedChatModel === "chat-model-reasoning"
               ? []
               : [
-                  "getWeather",
                   "createDocument",
                   "updateDocument",
                   "requestSuggestions",
@@ -203,7 +201,6 @@ export async function POST(request: Request) {
                 ],
           experimental_transform: smoothStream({ chunking: "word" }),
           tools: {
-            getWeather,
             createDocument: createDocument({ session, dataStream }),
             updateDocument: updateDocument({ session, dataStream }),
             requestSuggestions: requestSuggestions({
@@ -270,7 +267,7 @@ export async function POST(request: Request) {
 
         dataStream.merge(
           result.toUIMessageStream({
-            sendReasoning: true,
+            sendReasoning: false,
           })
         );
       },
