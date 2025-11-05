@@ -10,7 +10,8 @@ export const chatModels: ChatModel[] = [
   {
     id: "chat-model",
     name: "Gemini 2.0 Flash",
-    description: "Fast and versatile Google AI model with strong tool-calling capabilities",
+    description:
+      "Fast and versatile Google AI model with strong tool-calling capabilities",
   },
   // {
   //   id: "chat-model-reasoning",

@@ -352,10 +352,10 @@ function PureMultimodalInput({
               selectedModelId={selectedModelId}
               status={status}
             />
-            <ModelSelectorCompact
+            {/* <ModelSelectorCompact
               onModelChange={onModelChange}
               selectedModelId={selectedModelId}
-            />
+            /> */}
           </PromptInputTools>
 
           {status === "submitted" ? (

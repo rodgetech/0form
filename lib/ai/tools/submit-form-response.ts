@@ -11,12 +11,12 @@ type SubmitFormResponseProps = {
 export const submitFormResponse = ({ form }: SubmitFormResponseProps) =>
   tool({
     description:
-      "Submit the completed form response to the database. Use this tool ONLY after ALL required fields have been collected and validated. This performs final validation and saves the submission permanently. For file fields, also provide fileMetadata with file details.",
+      "Submit the completed form response to the database. Use this tool ONLY after ALL required fields have been collected and validated. This performs final validation and saves the submission permanently. For file fields, also provide fileMetadata with file details. For multi-select choice fields, values should be arrays.",
     inputSchema: z.object({
       responses: z
-        .record(z.string())
+        .record(z.union([z.string(), z.array(z.string())]))
         .describe(
-          "All collected field responses as key-value pairs (fieldName: value). For file fields, value should be the blob URL."
+          "All collected field responses as key-value pairs (fieldName: value). For file fields, value should be the blob URL. For multi-select choice fields, value should be an array of selected choices (e.g., ['Red', 'Blue'])."
         ),
       fileMetadata: z
         .record(
@@ -114,7 +114,7 @@ export const submitFormResponse = ({ form }: SubmitFormResponseProps) =>
       // Instead of storing just URL string, store {url, filename, mimeType} object
       const transformedResponses: Record<
         string,
-        string | { url: string; filename: string; mimeType: string }
+        string | string[] | { url: string; filename: string; mimeType: string }
       > = { ...responses };
       for (const field of schema.fields) {
         if (field.type === "file" && responses[field.name]) {

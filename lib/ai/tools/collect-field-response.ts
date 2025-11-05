@@ -15,7 +15,7 @@ type CollectFieldResponseProps = {
 export const collectFieldResponse = ({ form }: CollectFieldResponseProps) =>
   tool({
     description:
-      "Validate a user's response for a specific form field. Use this tool after the user provides an answer to verify it matches the field type and validation rules. This does NOT save to the database - it only validates. Call this for each field as the user provides answers. For file fields, provide the file URL, filename, and MIME type from the uploaded attachment.",
+      "Validate a user's response for a specific form field. Use this tool after the user provides an answer to verify it matches the field type and validation rules. This does NOT save to the database - it only validates. Call this for each field as the user provides answers. For file fields, provide the file URL, filename, and MIME type from the uploaded attachment. For multi-select choice fields, provide an array of selected values.",
     inputSchema: z.object({
       fieldName: z
         .string()
@@ -23,9 +23,9 @@ export const collectFieldResponse = ({ form }: CollectFieldResponseProps) =>
           "The name of the field being validated (e.g., 'email', 'phone_number')"
         ),
       fieldValue: z
-        .string()
+        .union([z.string(), z.array(z.string())])
         .describe(
-          "The user's response value to validate. For file fields, this should be the blob URL."
+          "The user's response value to validate. For file fields, this should be the blob URL. For multi-select choice fields, provide an array of selected values (e.g., ['Red', 'Blue']). For all other fields, provide a string."
         ),
       fileName: z
         .string()
@@ -64,7 +64,10 @@ export const collectFieldResponse = ({ form }: CollectFieldResponseProps) =>
             error: "Please upload a file",
           };
         }
-        validationResult = validateFile(field, fieldValue, fileName, mimeType);
+        const stringValue = Array.isArray(fieldValue)
+          ? fieldValue[0]
+          : fieldValue;
+        validationResult = validateFile(field, stringValue, fileName, mimeType);
       } else {
         // For non-file fields, use regular validation
         validationResult = validateFieldType(field, fieldValue, field.label);

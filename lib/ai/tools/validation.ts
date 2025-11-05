@@ -205,6 +205,41 @@ export function validateChoice(
 }
 
 /**
+ * Validate multi-choice field (must match multiple options from the list)
+ */
+export function validateMultiChoice(
+  values: string[],
+  choices: string[]
+): ValidationResult {
+  if (!Array.isArray(values) || values.length === 0) {
+    return {
+      valid: false,
+      error: `Please select at least one option from: ${choices.join(", ")}`,
+    };
+  }
+
+  const invalidChoices: string[] = [];
+  for (const value of values) {
+    const normalized = value.toLowerCase().trim();
+    const isValid = choices.some(
+      (choice) => choice.toLowerCase().trim() === normalized
+    );
+    if (!isValid) {
+      invalidChoices.push(value);
+    }
+  }
+
+  if (invalidChoices.length > 0) {
+    return {
+      valid: false,
+      error: `Invalid choices: ${invalidChoices.join(", ")}. Please choose from: ${choices.join(", ")}`,
+    };
+  }
+
+  return { valid: true };
+}
+
+/**
  * Validate scale field (must be within range)
  */
 export function validateScale(
@@ -234,23 +269,44 @@ export function validateScale(
  */
 export function validateFieldType(
   field: FormField,
-  value: string,
+  value: string | string[],
   fieldLabel?: string
 ): ValidationResult {
+  // Handle array values (multi-choice fields)
+  const isArrayValue = Array.isArray(value);
+  const stringValue = isArrayValue ? "" : (value as string);
+
   // Check required fields
-  if (field.required && !validateRequired(value)) {
-    return { valid: false, error: "This field is required" };
+  if (field.required) {
+    if (isArrayValue) {
+      if (value.length === 0) {
+        return { valid: false, error: "This field is required" };
+      }
+    } else if (!validateRequired(stringValue)) {
+      return { valid: false, error: "This field is required" };
+    }
   }
 
   // Allow empty for optional fields
-  if (!field.required && value.trim().length === 0) {
-    return { valid: true };
+  if (!field.required) {
+    if (isArrayValue && value.length === 0) {
+      return { valid: true };
+    }
+    if (!isArrayValue && stringValue.trim().length === 0) {
+      return { valid: true };
+    }
   }
 
   // Validate based on field type
   switch (field.type) {
     case "email": {
-      if (!validateEmail(value)) {
+      if (isArrayValue) {
+        return {
+          valid: false,
+          error: "Email field cannot have multiple values",
+        };
+      }
+      if (!validateEmail(stringValue)) {
         return {
           valid: false,
           error:
@@ -261,7 +317,10 @@ export function validateFieldType(
     }
 
     case "url": {
-      if (!validateUrl(value)) {
+      if (isArrayValue) {
+        return { valid: false, error: "URL field cannot have multiple values" };
+      }
+      if (!validateUrl(stringValue)) {
         return {
           valid: false,
           error: "Please provide a valid URL (e.g., https://example.com)",
@@ -271,33 +330,76 @@ export function validateFieldType(
     }
 
     case "number": {
+      if (isArrayValue) {
+        return {
+          valid: false,
+          error: "Number field cannot have multiple values",
+        };
+      }
       return validateNumber(
-        value,
+        stringValue,
         field.validation?.min,
         field.validation?.max
       );
     }
 
     case "date": {
-      return validateDate(value, fieldLabel ?? field.label);
+      if (isArrayValue) {
+        return {
+          valid: false,
+          error: "Date field cannot have multiple values",
+        };
+      }
+      return validateDate(stringValue, fieldLabel ?? field.label);
     }
 
     case "choice": {
       if (!field.options?.choices) {
         return { valid: false, error: "Invalid field configuration" };
       }
-      return validateChoice(value, field.options.choices);
+
+      // Check if this is a multi-select field
+      if (field.options.multiSelect) {
+        if (!isArrayValue) {
+          return {
+            valid: false,
+            error: "Multi-select field requires array of values",
+          };
+        }
+        return validateMultiChoice(value as string[], field.options.choices);
+      }
+
+      // Single-select field
+      if (isArrayValue) {
+        return {
+          valid: false,
+          error: "Single-select field cannot have multiple values",
+        };
+      }
+      return validateChoice(stringValue, field.options.choices);
     }
 
     case "scale": {
+      if (isArrayValue) {
+        return {
+          valid: false,
+          error: "Scale field cannot have multiple values",
+        };
+      }
       if (!field.options?.min || !field.options?.max) {
         return { valid: false, error: "Invalid field configuration" };
       }
-      return validateScale(value, field.options.min, field.options.max);
+      return validateScale(stringValue, field.options.min, field.options.max);
     }
 
     case "text":
     case "longtext": {
+      if (isArrayValue) {
+        return {
+          valid: false,
+          error: "Text field cannot have multiple values",
+        };
+      }
       // Text fields are always valid if non-empty (checked above)
       return { valid: true };
     }

@@ -21,7 +21,7 @@ export const myProvider = isTestEnvironment
     })()
   : customProvider({
       languageModels: {
-        "chat-model": gateway.languageModel("google/gemini-2.0-flash"),
+        "chat-model": gateway.languageModel("google/gemini-2.5-flash"),
         // "chat-model-reasoning": wrapLanguageModel({
         //   model: gateway.languageModel("xai/grok-3-mini"),
         //   middleware: extractReasoningMiddleware({ tagName: "think" }),

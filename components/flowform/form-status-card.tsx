@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
+import { CodeBlock } from "@/components/elements/code-block";
 import { CheckCircleFillIcon, CopyIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CodeBlock } from "@/components/elements/code-block";
 
 type FormStatusCardProps = {
   formId: string;
@@ -54,7 +54,8 @@ export function FormStatusCard({ formId }: FormStatusCardProps) {
   </body>
 </html>`;
 
-  const embedCode = embedMode === "inline" ? inlineEmbedCode : fullPageEmbedCode;
+  const embedCode =
+    embedMode === "inline" ? inlineEmbedCode : fullPageEmbedCode;
 
   const handleCopyLink = async () => {
     await copyToClipboard(formUrl);
@@ -157,7 +158,11 @@ export function FormStatusCard({ formId }: FormStatusCardProps) {
                     ? "Paste this code in your HTML where you want the form to appear."
                     : "Save this as an HTML file and host it on your website."}
                 </p>
-                <CodeBlock code={embedCode} language="html" showLineNumbers={false} />
+                <CodeBlock
+                  code={embedCode}
+                  language="html"
+                  showLineNumbers={false}
+                />
               </div>
             </div>
           </TabsContent>
