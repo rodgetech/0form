@@ -20,12 +20,8 @@ const nextConfig: NextConfig = {
         source: "/f/:path*",
         headers: [
           {
-            key: "X-Frame-Options",
-            value: "ALLOWALL",
-          },
-          {
             key: "Content-Security-Policy",
-            value: "frame-ancestors *",
+            value: "frame-ancestors 'self' https: http:",
           },
         ],
       },
