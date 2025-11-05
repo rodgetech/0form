@@ -11,17 +11,22 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      // default: nothing special (implicitly not frameable if no frame-ancestors)
+      // OR explicitly deny framing for non-form routes:
       {
-        // Apply to all routes that will be framed (change to "/(.*)" if needed)
+        source: "/((?!f/).*)",
+        headers: [{ key: "Content-Security-Policy", value: "frame-ancestors 'none'" }],
+      },
+      // allow framing ONLY for public form pages
+      {
         source: "/f/:path*",
         headers: [
           {
             key: "Content-Security-Policy",
-            // Allow any HTTPS ancestor + localhost dev
+            // MVP: anyone over HTTPS + your dev port
             value: "frame-ancestors https: http://localhost:3000",
           },
-          // Optional: explicitly clear XFO if some middleware sets it
-          { key: "X-Frame-Options", value: "ALLOWALL" }, // or just don't send it at all
+          // do NOT set X-Frame-Options; CSP replaces it
         ],
       },
     ];
