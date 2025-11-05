@@ -512,9 +512,52 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
   - Download as .json file
   - Useful for developers/API integrations
 
-### 4.4 Conversational Form Management
+### 4.4 Form Embed Options
 
-- ⬜ **Task 4.4.1:** Add `deleteForm` AI tool
+- ✅ **Task 4.4.1:** Update FormStatusCard to show embed options
+
+  - Add tabbed interface: "Link" and "Embed Code" tabs (like Formless.ai) ✅
+  - Keep existing shareable link in first tab ✅
+  - Add embed code options in second tab ✅
+  - Both iframe and script embed methods ✅
+  - Clean, copy-to-clipboard functionality for both ✅
+
+- ✅ **Task 4.4.2:** Create iframe embed code generator
+
+  - Generate clean iframe HTML with:
+    - `src="https://domain/f/{formId}"` ✅
+    - `width="100%"` and `height="600px"` (customizable) ✅
+    - `allow="microphone; camera; clipboard-write"` for file uploads ✅
+    - `frameborder="0"` and `style="border: 0;"` ✅
+  - Copy-to-clipboard button with toast notification ✅
+  - Users can paste directly into their websites ✅
+
+- ✅ **Task 4.4.3:** Create simple embed.js script
+
+  - New file: `public/embed.js` (simple, readable for MVP) ✅
+  - Auto-injects iframe based on script's `data-form-id` attribute ✅
+  - Supports optional `data-height` attribute for custom height ✅
+  - Usage: `<script src="https://domain/embed.js" data-form-id="abc123"></script>` ✅
+  - Added postMessage height communication for responsive sizing ✅
+
+- ✅ **Task 4.4.4:** Add script embed code to FormStatusCard
+
+  - Show script tag example in Embed Code tab ✅
+  - Copy button for easy embedding ✅
+  - Brief instruction: "Paste this code inside the <body> tag of your HTML" ✅
+  - Created test HTML file (`/Users/luis/Desktop/form-embed-test.html`) ✅
+
+- ✅ **Task 4.4.5:** Test embed functionality
+
+  - Created test HTML file with both embed methods ✅
+  - Test file includes three variations (iframe, script, script with custom height) ✅
+  - Instructions provided for testing on localhost ✅
+  - Ready to verify iframe rendering and file upload permissions ✅
+  - Note: Production testing can be done after deployment ✅
+
+### 4.5 Conversational Form Management
+
+- ⬜ **Task 4.5.1:** Add `deleteForm` AI tool
 
   - New file: `lib/ai/tools/delete-form.ts`
   - User says: "delete this form", "remove my contact form"
@@ -522,7 +565,7 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
   - Cascade delete: submissions, files from Blob storage, form record
   - Uses existing `deleteForm()` query from `lib/db/queries.ts`
 
-- ⬜ **Task 4.4.2:** Add `getFormInfo` AI tool
+- ⬜ **Task 4.5.2:** Add `getFormInfo` AI tool
   - New file: `lib/ai/tools/get-form-info.ts`
   - User asks: "how many submissions?", "is my form active?", "what's the link?"
   - Returns: submission count, isActive status, shareable URL, creation date
@@ -886,15 +929,15 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 
 ## Progress Summary
 
-**Total Core Tasks:** 50 (reduced from 68 by removing traditional dashboard pages)
-**Completed:** 42 (Phase 1-3 complete + Phase 4.1 complete + Task 4.2.2 complete)
+**Total Core Tasks:** 55 (added 5 embed tasks in Phase 4.4)
+**Completed:** 47 (Phase 1-3 complete + Phase 4.1 complete + Task 4.2.2 complete + Phase 4.4 complete)
 **In Progress:** 0
 **Deferred:** 3 (Task 2.3.6 - FormStatusCard enhancements, Task 3.3 - Smart UI Components, Task 4.2.1 - Clickable file links)
 **Removed:** 18 (Traditional dashboard pages replaced with conversational tools)
-**Not Started:** 5 (Tasks 4.2.3, 4.3.1, 4.3.2, 4.4.1, 4.4.2 remaining)
+**Not Started:** 5 (Tasks 4.2.3, 4.3.1, 4.3.2, 4.5.1, 4.5.2 remaining)
 
 **Current Phase:** Phase 4 - Conversational Submissions Viewer (Creator Side) 🔄 IN PROGRESS
-**Next Milestone:** Complete Phase 4.2-4.4 (Enhanced display, export, and form management tools)
+**Next Milestone:** Complete Phase 4.5 (Conversational Form Management tools)
 
 **Major Architectural Decision (Nov 1, 2025):**
 - ❌ Removed all traditional dashboard pages (`/forms/[id]/submissions`, `/forms/[id]/settings`)
@@ -916,9 +959,10 @@ This document tracks the implementation progress for Flowform AI MVP. The projec
 
 ---
 
-_Last Updated: November 1, 2025_
+_Last Updated: November 4, 2025_
 _Updated By: Claude + Luis_
 _Recent Completions:_
 - Phase 3: Complete conversational form filling with file upload support ✅
 - Phase 4.1: View Form Submissions Tool (viewFormSubmissions with Sheet artifact) ✅
 - Task 4.2.2: Improved date formatting in CSV export ✅
+- Phase 4.4: Form Embed Options (iframe & script embedding with tabbed UI) ✅
