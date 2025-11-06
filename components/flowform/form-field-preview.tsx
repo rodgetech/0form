@@ -1,13 +1,9 @@
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import type { FormField } from "@/lib/ai/tools/generate-form-schema";
 
@@ -112,7 +108,7 @@ function renderFieldInput(field: FormField, value?: unknown) {
         />
       );
 
-    case "choice":
+    case "choice": {
       if (!field.options?.choices || field.options.choices.length === 0) {
         return (
           <div className="text-destructive text-sm">
@@ -122,85 +118,71 @@ function renderFieldInput(field: FormField, value?: unknown) {
       }
 
       if (field.options.multiSelect) {
-        // For multi-select with value, show selected items as badges
-        if (value && Array.isArray(value) && value.length > 0) {
-          return (
-            <div className="flex flex-wrap gap-2 rounded-md border bg-muted/50 px-3 py-2">
-              {value.map((item) => (
-                <Badge key={String(item)} variant="secondary">
-                  {String(item)}
-                </Badge>
-              ))}
-            </div>
-          );
-        }
-        // No value: show placeholder
+        // Multi-select: Show checkboxes
+        const selectedValues = Array.isArray(value) ? (value as string[]) : [];
+
         return (
-          <Select disabled>
-            <SelectTrigger className="bg-muted/50">
-              <SelectValue placeholder="Select options (multiple selections allowed)" />
-            </SelectTrigger>
-            <SelectContent>
-              {field.options.choices.map((choice) => (
-                <SelectItem key={choice} value={choice}>
+          <div className="flex flex-wrap gap-4">
+            {field.options.choices.map((choice) => (
+              <div className="flex items-center space-x-2" key={choice}>
+                <Checkbox
+                  checked={selectedValues.includes(choice)}
+                  disabled
+                  id={`${field.name}-${choice}`}
+                />
+                <label
+                  className="font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  htmlFor={`${field.name}-${choice}`}
+                >
                   {choice}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                </label>
+              </div>
+            ))}
+          </div>
         );
       }
 
-      // Single select
+      // Single select: Show radio buttons
+      const selectedValue = typeof value === "string" ? value : "";
+
       return (
-        <Select defaultValue={value ? String(value) : undefined} disabled>
-          <SelectTrigger className="bg-muted/50">
-            <SelectValue placeholder="Select an option" />
-          </SelectTrigger>
-          <SelectContent>
+        <RadioGroup disabled value={selectedValue}>
+          <div className="flex flex-wrap gap-4">
             {field.options.choices.map((choice) => (
-              <SelectItem key={choice} value={choice}>
-                {choice}
-              </SelectItem>
+              <div className="flex items-center space-x-2" key={choice}>
+                <RadioGroupItem id={`${field.name}-${choice}`} value={choice} />
+                <label
+                  className="font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  htmlFor={`${field.name}-${choice}`}
+                >
+                  {choice}
+                </label>
+              </div>
             ))}
-          </SelectContent>
-        </Select>
+          </div>
+        </RadioGroup>
       );
+    }
 
     case "scale": {
       const min = field.options?.min ?? 1;
       const max = field.options?.max ?? 5;
-      const selectedValue = value ? Number(value) : undefined;
-      const percentage =
-        selectedValue !== undefined
-          ? ((selectedValue - min) / (max - min)) * 100
-          : undefined;
+      const selectedValue = value ? Number(value) : min;
 
       return (
-        <div className="space-y-2">
+        <div className="space-y-4">
           <div className="flex justify-between text-muted-foreground text-sm">
             <span>{field.options?.labels?.[0] || min}</span>
             <span>{field.options?.labels?.[1] || max}</span>
           </div>
-          <div className="relative h-2 overflow-hidden rounded-full bg-muted">
-            {percentage !== undefined ? (
-              <>
-                {/* Filled portion up to selected value */}
-                <div
-                  className="absolute inset-y-0 left-0 bg-primary"
-                  style={{ width: `${percentage}%` }}
-                />
-                {/* Marker at selected value */}
-                <div
-                  className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 h-4 w-1 rounded-full bg-primary shadow-md"
-                  style={{ left: `${percentage}%` }}
-                />
-              </>
-            ) : (
-              <div className="absolute inset-0 bg-gradient-to-r from-muted-foreground/20 to-muted-foreground/40" />
-            )}
-          </div>
-          {selectedValue !== undefined ? (
+          <Slider
+            defaultValue={[selectedValue]}
+            disabled
+            max={max}
+            min={min}
+            step={1}
+          />
+          {value ? (
             <p className="text-center font-medium text-sm">
               Selected: {selectedValue}
             </p>

@@ -15,7 +15,9 @@ const nextConfig: NextConfig = {
       // OR explicitly deny framing for non-form routes:
       {
         source: "/((?!f/).*)",
-        headers: [{ key: "Content-Security-Policy", value: "frame-ancestors 'none'" }],
+        headers: [
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+        ],
       },
       // allow framing ONLY for public form pages
       {

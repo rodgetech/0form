@@ -385,6 +385,7 @@ export const formFillingPrompt = (formSchema: {
     label: string;
     required: boolean;
     options?: Record<string, unknown>;
+    validation?: Record<string, unknown>;
   }>;
   tone: "friendly" | "professional" | "playful" | "formal";
 }) => {
@@ -407,10 +408,33 @@ ${formSchema.description ? `Form Description: ${formSchema.description}` : ""}
 
 **Fields to Collect (in order):**
 ${formSchema.fields
-  .map(
-    (field) =>
-      `- ${field.label} (${field.name}, type: ${field.type}, ${field.required ? "required" : "optional"})`
-  )
+  .map((field) => {
+    let fieldInfo = `- ${field.label} (${field.name}, type: ${field.type}`;
+
+    // Add choices for choice fields
+    if (field.type === "choice" && field.options?.choices) {
+      fieldInfo += `, choices: ${(field.options.choices as string[]).join(", ")}`;
+      if (field.options.multiSelect) {
+        fieldInfo += " [multi-select allowed]";
+      }
+    }
+
+    // Add scale range for scale fields
+    if (field.type === "scale" && field.options?.min && field.options?.max) {
+      fieldInfo += `, scale: ${field.options.min}-${field.options.max}`;
+      if (field.options.labels) {
+        fieldInfo += ` [${(field.options.labels as string[]).join(" to ")}]`;
+      }
+    }
+
+    // Add file types for file fields
+    if (field.type === "file" && field.validation?.acceptedTypes) {
+      fieldInfo += `, accepts: ${(field.validation.acceptedTypes as string[]).join(", ")}`;
+    }
+
+    fieldInfo += `, ${field.required ? "required" : "optional"})`;
+    return fieldInfo;
+  })
   .join("\n")}
 
 **Core Instructions:**
@@ -453,7 +477,33 @@ ${formSchema.fields
 - Required field empty: "This field is required."
 - Scale out of range: "Please choose between [min] and [max]."
 - Date invalid: "I couldn't understand that date. Could you try 'January 15, 2026' or 'tomorrow at 3pm'?"
+- Choice invalid: "Please choose one of: [list choices]"
+- Multi-choice invalid: "Please select at least one from: [list choices]"
 - Then immediately re-ask the question
+
+**Choice Field Handling:**
+- **IMPORTANT:** When asking for a choice field, ALWAYS list all available choices in your question
+- Format your question to include the options clearly:
+  - Single-select: "What's your favorite color? (Red, Blue, Green, Yellow)"
+  - Multi-select: "Which colors do you like? You can select multiple. (Red, Blue, Green, Yellow)"
+- Never ask for a choice without showing what the choices are
+
+- For single-select fields (multiSelect: false):
+  - User should provide ONE choice (e.g., "I choose Blue" or just "Blue")
+  - Extract the choice value and call collectFieldResponse with a string
+  - Example: User says "Red" → Call collectFieldResponse(fieldName, "Red")
+
+- For multi-select fields (multiSelect: true):
+  - User can provide MULTIPLE choices in various formats
+  - Accept formats: "Red and Blue", "Red, Blue, and Green", "Red,Blue", "A and B and C"
+  - Parse comma-separated or "and"-separated lists into an array
+  - Call collectFieldResponse with an array of strings
+  - Examples:
+    * User says "Red, Blue, and Green" → Call collectFieldResponse(fieldName, ["Red", "Blue", "Green"])
+    * User says "A and B" → Call collectFieldResponse(fieldName, ["A", "B"])
+    * User says "Option 1" (only one) → Call collectFieldResponse(fieldName, ["Option 1"])
+  - If validation fails, list all available choices clearly
+  - After successful validation, confirm what they selected: "Got it! You selected Red, Blue, and Green."
 
 **Date Field Handling:**
 - Accept natural language dates: "tomorrow", "next Tuesday", "Jan 1st at 2pm", "in 3 days"
