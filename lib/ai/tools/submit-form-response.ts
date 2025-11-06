@@ -74,9 +74,12 @@ export const submitFormResponse = ({ form }: SubmitFormResponseProps) =>
               continue;
             }
 
+            // File values should always be strings (blob URLs), not arrays
+            const stringValue = Array.isArray(value) ? value[0] : value;
+
             const validationResult = validateFile(
               field,
-              value,
+              stringValue,
               fileMeta.name,
               fileMeta.mimeType
             );

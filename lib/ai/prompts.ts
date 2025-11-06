@@ -385,6 +385,7 @@ export const formFillingPrompt = (formSchema: {
     label: string;
     required: boolean;
     options?: Record<string, unknown>;
+    validation?: Record<string, unknown>;
   }>;
   tone: "friendly" | "professional" | "playful" | "formal";
 }) => {
@@ -412,7 +413,7 @@ ${formSchema.fields
 
     // Add choices for choice fields
     if (field.type === "choice" && field.options?.choices) {
-      fieldInfo += `, choices: ${field.options.choices.join(", ")}`;
+      fieldInfo += `, choices: ${(field.options.choices as string[]).join(", ")}`;
       if (field.options.multiSelect) {
         fieldInfo += " [multi-select allowed]";
       }
@@ -422,13 +423,13 @@ ${formSchema.fields
     if (field.type === "scale" && field.options?.min && field.options?.max) {
       fieldInfo += `, scale: ${field.options.min}-${field.options.max}`;
       if (field.options.labels) {
-        fieldInfo += ` [${field.options.labels.join(" to ")}]`;
+        fieldInfo += ` [${(field.options.labels as string[]).join(" to ")}]`;
       }
     }
 
     // Add file types for file fields
     if (field.type === "file" && field.validation?.acceptedTypes) {
-      fieldInfo += `, accepts: ${field.validation.acceptedTypes.join(", ")}`;
+      fieldInfo += `, accepts: ${(field.validation.acceptedTypes as string[]).join(", ")}`;
     }
 
     fieldInfo += `, ${field.required ? "required" : "optional"})`;
